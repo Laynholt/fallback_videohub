@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0c">
+<title>REMOVI Channel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0c;--bg2:#111115;--surface:#1e1e28;--surface2:#252532;--border:#2a2a38;
+  --accent:#e8610a;--accent2:#ff8c42;--text:#f0eee8;--text2:#9896a0;--text3:#5a5865;
+  --page-pad:clamp(12px,2vw,24px);--block-gap:clamp(14px,2vw,22px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+a{text-decoration:none;color:inherit}
+.shell{max-width:1320px;margin:0 auto;padding:clamp(14px,2.2vw,24px) var(--page-pad) calc(40px + var(--safe-b))}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:var(--block-gap);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(18px,1.8vw,22px)}
+.brand-mark{width:32px;height:32px;border-radius:10px;background:var(--accent);display:grid;place-items:center}
+.top-links{display:flex;gap:10px;flex-wrap:wrap}
+.top-link{padding:9px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)}
+.top-link:hover{border-color:var(--accent);color:var(--accent2)}
+.channel-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,.8fr);gap:var(--block-gap);margin-bottom:var(--block-gap)}
+.hero-card,.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.hero-cover{position:relative;min-height:240px;padding:24px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#18181f,#0c1020)}
+.hero-cover::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 22% 24%,rgba(232,97,10,.26),transparent 30%),radial-gradient(circle at 80% 18%,rgba(255,255,255,.08),transparent 20%),linear-gradient(145deg,rgba(255,255,255,.04),transparent 60%)}
+.hero-copy{position:relative;z-index:1;max-width:680px}
+.hero-kicker{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);margin-bottom:14px}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(28px,3.2vw,40px);line-height:1.04;letter-spacing:-.04em;margin-bottom:10px}
+.hero-text{color:var(--text2);font-size:clamp(14px,1.1vw,15px);line-height:1.7;max-width:640px}
+.stat-card{padding:20px;display:grid;gap:14px;align-content:start}
+.avatar{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);color:var(--accent);font-family:'Syne',sans-serif;font-size:22px}
+.stat-title{font-family:'Syne',sans-serif;font-size:18px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat-box{padding:12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+.stat-box strong{display:block;font-family:'Syne',sans-serif;font-size:18px;margin-bottom:4px}
+.stat-box span{color:var(--text2);font-size:12px}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(18px,1.5vw,22px);margin-bottom:12px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.video-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .22s ease,box-shadow .22s ease}
+.video-card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(0,0,0,.45),0 0 0 1px var(--accent) inset}
+.thumb-wrap{position:relative;aspect-ratio:16/9;background:var(--surface);overflow:hidden}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .32s ease,filter .28s ease}
+.video-card:hover .thumb-wrap img{transform:scale(1.05);filter:saturate(1.06) contrast(1.05)}
+.badge{position:absolute;left:8px;top:8px;padding:4px 8px;border-radius:999px;background:rgba(10,10,12,.72);border:1px solid rgba(255,255,255,.08);font-family:'DM Mono',monospace;font-size:10px;color:#fff}
+.duration{position:absolute;right:8px;bottom:8px;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.82);font-family:'DM Mono',monospace;font-size:11px}
+.card-copy{padding:12px}
+.card-copy strong{display:block;font-family:'Syne',sans-serif;font-size:14px;line-height:1.35;margin-bottom:6px}
+.card-copy span{display:block;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;line-height:1.6}
+.empty-state{min-height:220px;display:grid;place-items:center;padding:24px;border:1px dashed var(--border);border-radius:16px;background:linear-gradient(135deg,rgba(30,30,40,.5),rgba(17,17,21,.9));text-align:center}
+.empty-state strong{display:block;font-family:'Syne',sans-serif;font-size:24px;margin-bottom:8px}
+.empty-state span{display:block;color:var(--text2);font-size:14px;line-height:1.6;max-width:520px}
+@media (max-width:960px){.channel-hero{grid-template-columns:1fr}}
+@media (max-width:640px){
+  .shell{padding:16px 12px calc(28px + var(--safe-b))}
+  .hero-cover{min-height:200px;padding:18px 16px}
+  .topbar{align-items:flex-start;flex-direction:column}
+  .top-links{width:100%}
+  .top-link{flex:1;text-align:center}
+  .cards-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">▶</span>
+        <span>REMOVI</span>
+      </a>
+      <nav class="top-links">
+        <a class="top-link" href="index.html">Каталог</a>
+      </nav>
+    </header>
+
+    <section class="channel-hero">
+      <div class="hero-card">
+        <div class="hero-cover">
+          <div class="hero-copy">
+            <div class="hero-kicker">Канал автора</div>
+            <h1 class="hero-title" id="channelTitle"></h1>
+            <p class="hero-text" id="channelDescription"></p>
+          </div>
+        </div>
+      </div>
+      <aside class="stat-card">
+        <div class="avatar" id="channelAvatar"></div>
+        <div class="stat-title" id="channelName"></div>
+        <div class="stat-grid">
+          <div class="stat-box"><strong id="videoCount">0</strong><span>видео</span></div>
+          <div class="stat-box"><strong id="viewCount">0</strong><span>просмотров</span></div>
+          <div class="stat-box"><strong id="categoryCount">0</strong><span>категорий</span></div>
+          <div class="stat-box"><strong id="latestVideoDate">—</strong><span>последний релиз</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section>
+      <h2 class="section-title">Все видео автора</h2>
+      <div class="cards-grid" id="channelGrid"></div>
+    </section>
+  </div>
+
+  <script defer src="scripts/client-api.js"></script>
+  <script defer src="scripts/channel.js"></script>
+</body>
+</html>

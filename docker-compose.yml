@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: removi_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: "${PORT}"
+    expose:
+      - "${PORT}"
+
+  nginx:
+    image: nginx:latest
+    container_name: removi_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${NGINX_BIND_IP}:${NGINX_PORT}:${NGINX_PORT}"
+    environment:
+      APP_PORT: "${PORT}"
+      NGINX_PORT: "${NGINX_PORT}"
+    command: >
+      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_PORT'
+      < /etc/nginx/templates/nginx.conf.template
+      > /etc/nginx/nginx.conf
+      && nginx -g 'daemon off;'"
+    volumes:
+      - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro

@@ -1,0 +1,7 @@
+{
+  "name": "removi",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}
