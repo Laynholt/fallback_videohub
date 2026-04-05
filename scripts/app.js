@@ -19,6 +19,7 @@
   let modalCloseTimer = 0;
   let catalogRequestToken = 0;
   let searchTimer = 0;
+  const currentFeedSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const welcomeStorageKey = 'removi-ai-intro-seen';
 
   function byId(id) {
@@ -140,7 +141,8 @@
         filter: currentFilter,
         query: currentQuery,
         offset: shownCount,
-        limit: Math.min(size, remaining)
+        limit: Math.min(size, remaining),
+        seed: currentFeedSeed
       });
 
       if (requestToken !== catalogRequestToken) return;

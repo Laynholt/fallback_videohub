@@ -205,7 +205,8 @@ function handleApi(requestUrl, response) {
     const query = requestUrl.searchParams.get('q') || '';
     const offset = requestUrl.searchParams.get('offset') || '0';
     const limit = requestUrl.searchParams.get('limit') || '30';
-    sendJson(response, 200, getCatalogPage({ filter, query, offset, limit }));
+    const seed = requestUrl.searchParams.get('seed') || '';
+    sendJson(response, 200, getCatalogPage({ filter, query, offset, limit, seed }));
     return true;
   }
 

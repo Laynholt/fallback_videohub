@@ -115,6 +115,16 @@ function stableCatalogSort(cards) {
   });
 }
 
+function seededCatalogSort(cards, seed) {
+  if (!seed) return stableCatalogSort(cards);
+  return [...cards].sort((left, right) => {
+    const leftHash = hashString(`catalog:${seed}:${left.id}:${left.title}`);
+    const rightHash = hashString(`catalog:${seed}:${right.id}:${right.title}`);
+    if (leftHash !== rightHash) return leftHash - rightHash;
+    return left.id - right.id;
+  });
+}
+
 function serializeCard(card, options = {}) {
   const includeExcerpt = options.includeExcerpt === true;
   const previewStatic = String(card.previewStatic).startsWith('/') ? card.previewStatic : `/${card.previewStatic}`;
@@ -157,8 +167,8 @@ function scoreCard(card, query) {
   return score;
 }
 
-function getCatalogCards(filter, query) {
-  let cards = stableCatalogSort(ALL_CARDS);
+function getCatalogCards(filter, query, seed = '') {
+  let cards = seededCatalogSort(ALL_CARDS, seed);
 
   if (filter && filter !== 'all') {
     cards = cards.filter((card) => card.category === filter);
@@ -171,13 +181,16 @@ function getCatalogCards(filter, query) {
     .filter((entry) => entry.score > 0)
     .sort((left, right) => {
       if (right.score !== left.score) return right.score - left.score;
+      const leftHash = hashString(`search:${seed}:${left.card.id}:${left.card.title}`);
+      const rightHash = hashString(`search:${seed}:${right.card.id}:${right.card.title}`);
+      if (leftHash !== rightHash) return leftHash - rightHash;
       return left.card.id - right.card.id;
     })
     .map((entry) => entry.card);
 }
 
-function getCatalogPage({ filter = 'all', query = '', offset = 0, limit = SETTINGS.initial } = {}) {
-  const cards = getCatalogCards(filter, query);
+function getCatalogPage({ filter = 'all', query = '', offset = 0, limit = SETTINGS.initial, seed = '' } = {}) {
+  const cards = getCatalogCards(filter, query, seed);
   const safeOffset = Math.max(0, Number(offset) || 0);
   const safeLimit = Math.max(1, Math.min(60, Number(limit) || SETTINGS.initial));
   const items = cards.slice(safeOffset, safeOffset + safeLimit).map((card) => serializeCard(card));

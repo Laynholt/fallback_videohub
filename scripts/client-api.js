@@ -60,13 +60,14 @@
     return response.json();
   }
 
-  function fetchCatalog({ filter = 'all', query = '', offset = 0, limit = SETTINGS.initial } = {}) {
+  function fetchCatalog({ filter = 'all', query = '', offset = 0, limit = SETTINGS.initial, seed = '' } = {}) {
     const params = new URLSearchParams({
       filter,
       q: query,
       offset: String(offset),
       limit: String(limit)
     });
+    if (seed) params.set('seed', String(seed));
     return fetchJson(`/api/catalog?${params.toString()}`);
   }
 
