@@ -30,7 +30,7 @@
   function renderCards(cards) {
     const root = byId('channelGrid');
     if (!cards.length) {
-      root.innerHTML = '<div class="empty-state"><div><strong>Канал не найден</strong><span>Похоже, для этого автора пока нет опубликованных видео или ссылка была собрана некорректно.</span></div></div>';
+      root.innerHTML = '<div class="empty-state"><div><strong>Профиль не найден</strong><span>Похоже, для этого автора пока нет опубликованных релизов или ссылка была собрана некорректно.</span></div></div>';
       return;
     }
 
@@ -43,7 +43,7 @@
         </div>
         <div class="card-copy">
           <strong>${escapeHtml(card.title)}</strong>
-          <span>${escapeHtml(card.views)} просмотров · ${escapeHtml(card.date)}</span>
+          <span>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</span>
         </div>
       </article>
     `).join('');
@@ -52,10 +52,10 @@
   }
 
   function renderMissingChannel(author) {
-    document.title = 'Канал не найден — REMOVI';
-    byId('channelTitle').textContent = 'Канал не найден';
-    byId('channelDescription').textContent = 'Похоже, для этого автора пока нет опубликованных видео.';
-    byId('channelName').textContent = author || 'Неизвестный автор';
+    document.title = 'Профиль не найден — REMOVI';
+    byId('channelTitle').textContent = 'Профиль не найден';
+    byId('channelDescription').textContent = 'Похоже, для этого автора пока нет опубликованных релизов.';
+    byId('channelName').textContent = author || 'Неизвестный артист';
     byId('channelAvatar').textContent = 'R';
     byId('videoCount').textContent = '0';
     byId('viewCount').textContent = '0';
@@ -78,7 +78,7 @@
         return;
       }
 
-      document.title = `${payload.author} — REMOVI Channel`;
+      document.title = `${payload.author} — REMOVI Artist`;
       byId('channelTitle').textContent = payload.author;
       byId('channelDescription').textContent = payload.description;
       byId('channelName').textContent = payload.author;

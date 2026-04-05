@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
-<title>REMOVI — Смотри. Открывай. Погружайся.</title>
+<title>REMOVI — Слушай. Открывай. Погружайся.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -296,7 +296,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   .topbar{gap:6px;padding:0 8px}
   .topbar-actions{gap:4px}
   .icon-btn,.search-toggle{width:34px;height:34px}
-  .icon-btn[title="Загрузить видео"]{display:none}
+  .icon-btn[title="Загрузить трек"]{display:none}
   .chip{padding:5px 10px;font-size:12px}
   .topbar-logo{font-size:16px}
   .modal{padding:16px 12px calc(22px + var(--safe-b))}
@@ -326,12 +326,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
 <!-- ── First visit overlay ── -->
 <div class="welcome-overlay" id="welcomeOverlay" aria-hidden="true">
   <div class="welcome-card" onclick="stopModalPropagation(event)" onmousedown="stopModalPropagation(event)" ontouchstart="stopModalPropagation(event)">
-    <div class="welcome-kicker">AI Video Hosting</div>
-    <h2>REMOVI хранит видео, созданные нейросетями</h2>
-    <p>Это каталог сгенерированного контента. Для просмотра роликов и доступа к персональным функциям нужен аккаунт.</p>
+    <div class="welcome-kicker">AI Audio Hub</div>
+    <h2>REMOVI хранит композиции, созданные нейросетями</h2>
+    <p>Это каталог сгенерированных композиций. Для прослушивания полных релизов и доступа к персональным функциям нужен аккаунт.</p>
     <div class="welcome-points">
       <div class="welcome-point"><span class="welcome-dot"></span><span><strong>Малая часть каталога открыта для ознакомления.</strong></span></div>
-      <div class="welcome-point"><span class="welcome-dot"></span><span><strong>Для получения полного доспута ко всему контенту необходимо зарегистироваться.</strong></span></div>
+      <div class="welcome-point"><span class="welcome-dot"></span><span><strong>Для полного доступа ко всем релизам и подборкам потребуется аккаунт.</strong></span></div>
     </div>
     <div class="welcome-actions">
       <button class="btn-primary" type="button" onclick="openWelcomeAuth('login')">Войти</button>
@@ -373,17 +373,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <div class="sidebar-divider"></div>
 
   <nav class="nav-section">
-    <div class="nav-label">Категории</div>
-    <div class="nav-item active" data-category="all" onclick="navClick(this)"><div class="nav-icon">◉</div><span class="nav-text">Все видео</span><div class="slim-tip">Все видео</div></div>
-    <div class="nav-item" data-category="travel" onclick="navClick(this)"><div class="nav-icon">✈️</div><span class="nav-text">Путешествия</span><div class="slim-tip">Путешествия</div></div>
-    <div class="nav-item" data-category="tech" onclick="navClick(this)"><div class="nav-icon">⌘</div><span class="nav-text">Технологии</span><div class="slim-tip">Технологии</div></div>
-    <div class="nav-item" data-category="music" onclick="navClick(this)"><div class="nav-icon">🎵</div><span class="nav-text">Музыка</span><div class="slim-tip">Музыка</div></div>
-    <div class="nav-item" data-category="art" onclick="navClick(this)"><div class="nav-icon">🎨</div><span class="nav-text">Арт</span><div class="slim-tip">Арт</div></div>
-    <div class="nav-item" data-category="science" onclick="navClick(this)"><div class="nav-icon">🔬</div><span class="nav-text">Наука</span><div class="slim-tip">Наука</div></div>
-    <div class="nav-item" data-category="cinema" onclick="navClick(this)"><div class="nav-icon">🎬</div><span class="nav-text">Кино</span><div class="slim-tip">Кино</div></div>
-    <div class="nav-item" data-category="sport" onclick="navClick(this)"><div class="nav-icon">🏆</div><span class="nav-text">Спорт</span><div class="slim-tip">Спорт</div></div>
-    <div class="nav-item" data-category="food" onclick="navClick(this)"><div class="nav-icon">☕</div><span class="nav-text">Еда</span><div class="slim-tip">Еда</div></div>
-    <div class="nav-item" data-category="lifestyle" onclick="navClick(this)"><div class="nav-icon">◎</div><span class="nav-text">Истории</span><div class="slim-tip">Истории</div></div>
+    <div class="nav-label">Жанры</div>
+    <div class="nav-item active" data-category="all" onclick="navClick(this)"><div class="nav-icon">◉</div><span class="nav-text">Все релизы</span><div class="slim-tip">Все релизы</div></div>
+    <div class="nav-item" data-category="ambient" onclick="navClick(this)"><div class="nav-icon">☁️</div><span class="nav-text">Ambient</span><div class="slim-tip">Ambient</div></div>
+    <div class="nav-item" data-category="phonk" onclick="navClick(this)"><div class="nav-icon">◈</div><span class="nav-text">Phonk</span><div class="slim-tip">Phonk</div></div>
+    <div class="nav-item" data-category="hyperpop" onclick="navClick(this)"><div class="nav-icon">✦</div><span class="nav-text">Hyperpop</span><div class="slim-tip">Hyperpop</div></div>
+    <div class="nav-item" data-category="house" onclick="navClick(this)"><div class="nav-icon">▣</div><span class="nav-text">House</span><div class="slim-tip">House</div></div>
+    <div class="nav-item" data-category="trap" onclick="navClick(this)"><div class="nav-icon">▲</div><span class="nav-text">Trap</span><div class="slim-tip">Trap</div></div>
+    <div class="nav-item" data-category="cinematic" onclick="navClick(this)"><div class="nav-icon">🎬</div><span class="nav-text">Cinematic</span><div class="slim-tip">Cinematic</div></div>
+    <div class="nav-item" data-category="lofi" onclick="navClick(this)"><div class="nav-icon">🌙</div><span class="nav-text">Lo-Fi</span><div class="slim-tip">Lo-Fi</div></div>
+    <div class="nav-item" data-category="techno" onclick="navClick(this)"><div class="nav-icon">⌘</div><span class="nav-text">Techno</span><div class="slim-tip">Techno</div></div>
+    <div class="nav-item" data-category="synthwave" onclick="navClick(this)"><div class="nav-icon">🌆</div><span class="nav-text">Synthwave</span><div class="slim-tip">Synthwave</div></div>
   </nav>
 
   <div class="sidebar-divider"></div>
@@ -405,14 +405,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
     <div class="topbar-logo" onclick="reloadPage()">REMOVI</div>
 
     <div class="search-wrap">
-      <input class="search-input" type="text" placeholder="Найти видео или автора..." id="searchInput" autocomplete="off">
+      <input class="search-input" type="text" placeholder="Найти трек или автора..." id="searchInput" autocomplete="off">
       <button class="search-btn" type="button" id="searchButton">⌕</button>
     </div>
 
     <div class="topbar-actions">
       <div class="search-toggle" onclick="toggleMobileSearch()">⌕</div>
       <div class="icon-btn icon-notif" onclick="requireAuth()" title="Уведомления">🔔</div>
-      <div class="icon-btn" onclick="requireAuth()" title="Загрузить видео">＋</div>
+      <div class="icon-btn" onclick="requireAuth()" title="Загрузить трек">＋</div>
       <div class="icon-btn" onclick="openModal('login')" title="Профиль">◉</div>
     </div>
   </header>
@@ -420,7 +420,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
   <!-- MOBILE SEARCH -->
   <div class="mobile-search-bar" id="mobileSearchBar">
     <div class="msb-inner">
-      <input type="search" placeholder="Найти видео или автора..." autocomplete="off" id="mobileSearchInput">
+      <input type="search" placeholder="Найти трек или автора..." autocomplete="off" id="mobileSearchInput">
       <button class="msb-close" onclick="toggleMobileSearch()">✕</button>
     </div>
   </div>

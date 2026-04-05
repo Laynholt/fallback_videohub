@@ -7,28 +7,28 @@
 
   const FILTERS = [
     { key: 'all', label: 'Все' },
-    { key: 'travel', label: 'Путешествия' },
-    { key: 'tech', label: 'Технологии' },
-    { key: 'music', label: 'Музыка' },
-    { key: 'art', label: 'Арт' },
-    { key: 'science', label: 'Наука' },
-    { key: 'cinema', label: 'Кино' },
-    { key: 'sport', label: 'Спорт' },
-    { key: 'food', label: 'Еда' },
-    { key: 'lifestyle', label: 'Истории' }
+    { key: 'ambient', label: 'Ambient' },
+    { key: 'phonk', label: 'Phonk' },
+    { key: 'hyperpop', label: 'Hyperpop' },
+    { key: 'house', label: 'House' },
+    { key: 'trap', label: 'Trap' },
+    { key: 'cinematic', label: 'Cinematic' },
+    { key: 'lofi', label: 'Lo-Fi' },
+    { key: 'techno', label: 'Techno' },
+    { key: 'synthwave', label: 'Synthwave' }
   ];
 
   const CATEGORY_THEMES = {
     all: { label: 'Все', colors: ['#111115', '#252532'], accent: '#ff8c42', mark: '◉' },
-    travel: { label: 'Путешествия', colors: ['#08111f', '#0e5a6f'], accent: '#5eead4', mark: '↗' },
-    tech: { label: 'Технологии', colors: ['#0b1120', '#312e81'], accent: '#93c5fd', mark: '⌘' },
-    music: { label: 'Музыка', colors: ['#140c1c', '#6b21a8'], accent: '#f9a8d4', mark: '♫' },
-    art: { label: 'Арт', colors: ['#1a1020', '#9a3412'], accent: '#fbbf24', mark: '✦' },
-    science: { label: 'Наука', colors: ['#07131b', '#0f766e'], accent: '#67e8f9', mark: '∆' },
-    cinema: { label: 'Кино', colors: ['#17120d', '#7c2d12'], accent: '#fdba74', mark: '▶' },
-    sport: { label: 'Спорт', colors: ['#0d1410', '#166534'], accent: '#86efac', mark: '▲' },
-    food: { label: 'Еда', colors: ['#1a120d', '#92400e'], accent: '#fcd34d', mark: '◌' },
-    lifestyle: { label: 'Истории', colors: ['#16131c', '#334155'], accent: '#c4b5fd', mark: '◎' }
+    ambient: { label: 'Ambient', colors: ['#0c1422', '#234d64'], accent: '#7dd3fc', mark: '☁' },
+    phonk: { label: 'Phonk', colors: ['#120c12', '#6b1d1d'], accent: '#fb7185', mark: '◈' },
+    hyperpop: { label: 'Hyperpop', colors: ['#1a1020', '#db2777'], accent: '#f9a8d4', mark: '✦' },
+    house: { label: 'House', colors: ['#1a120d', '#ea580c'], accent: '#fdba74', mark: '▣' },
+    trap: { label: 'Trap', colors: ['#111418', '#374151'], accent: '#d1d5db', mark: '▲' },
+    cinematic: { label: 'Cinematic', colors: ['#120f0d', '#7c2d12'], accent: '#f59e0b', mark: '▶' },
+    lofi: { label: 'Lo-Fi', colors: ['#16131c', '#475569'], accent: '#c4b5fd', mark: '◌' },
+    techno: { label: 'Techno', colors: ['#07131b', '#0f766e'], accent: '#67e8f9', mark: '⌘' },
+    synthwave: { label: 'Synthwave', colors: ['#170f1f', '#7e22ce'], accent: '#f472b6', mark: '◎' }
   };
 
   function normalizeText(value) {

@@ -213,7 +213,7 @@ function handleApi(requestUrl, response) {
     const id = requestUrl.searchParams.get('id');
     const payload = getVideoPayload(id);
     if (!payload) {
-      sendJson(response, 404, { error: 'Video not found' });
+      sendJson(response, 404, { error: 'Track not found' });
       return true;
     }
     sendJson(response, 200, payload);

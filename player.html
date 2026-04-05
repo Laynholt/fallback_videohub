@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
-<title>REMOVI Video</title>
+<title>REMOVI Audio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -132,7 +132,7 @@ a{text-decoration:none;color:inherit}
     <header class="topbar">
       <a class="brand" href="/">
         <span class="brand-mark">▶</span>
-        <span>REMOVI Video</span>
+        <span>REMOVI Audio</span>
       </a>
       <nav class="top-links">
         <a class="top-link" href="/">Каталог</a>
@@ -148,8 +148,8 @@ a{text-decoration:none;color:inherit}
           <div class="player-gate">
             <div class="player-gate-box">
               <div class="player-lock">🔒</div>
-              <strong>Войдите, чтобы смотреть</strong>
-              <span>Полный просмотр, сохранение в избранное и персональная лента открываются после авторизации.</span>
+              <strong>Войдите, чтобы слушать</strong>
+              <span>Полное прослушивание, сохранение в избранное и персональная лента открываются после авторизации.</span>
               <button class="cta" type="button" id="playerGateBtn">Войти</button>
             </div>
           </div>
@@ -162,20 +162,20 @@ a{text-decoration:none;color:inherit}
               <div class="author-avatar" id="playerAvatar"></div>
               <div>
                 <a class="author-name author-link" id="playerAuthorLink" href="#"><span id="playerAuthor"></span></a>
-                <div class="author-sub">Автор видео</div>
+                <div class="author-sub">Автор релиза</div>
               </div>
             </div>
-            <button class="cta" type="button" id="playerAuthBtn">Войти для полного просмотра</button>
+            <button class="cta" type="button" id="playerAuthBtn">Войти для полного прослушивания</button>
           </div>
           <div class="desc">
-            <strong>О видео</strong>
+            <strong>О релизе</strong>
             <span id="playerDescription"></span>
           </div>
         </div>
       </main>
 
       <aside class="side-card">
-        <h2>Похожие видео</h2>
+        <h2>Похожие релизы</h2>
         <div class="related" id="relatedVideos"></div>
       </aside>
     </div>
@@ -186,7 +186,7 @@ a{text-decoration:none;color:inherit}
       <div class="auth-head"></div>
       <button class="auth-close" type="button" id="playerAuthClose">✕</button>
       <div class="auth-title">Вход в REMOVI</div>
-      <div class="auth-sub">Авторизация остаётся прямо на странице просмотра.</div>
+      <div class="auth-sub">Авторизация остаётся прямо на странице прослушивания.</div>
       <div class="auth-tabs">
         <button class="auth-tab active" type="button" id="playerTabLogin">Войти</button>
         <button class="auth-tab" type="button" id="playerTabRegister">Регистрация</button>

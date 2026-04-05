@@ -1,0 +1,21 @@
+
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="bg-92" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1a1020"/><stop offset="100%" stop-color="#db2777"/>
+          </linearGradient>
+          <linearGradient id="panel-92" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="rgba(6,8,12,0.94)"/><stop offset="100%" stop-color="rgba(6,8,12,0.02)"/>
+          </linearGradient>
+        </defs>
+        <rect width="480" height="270" fill="url(#bg-92)"/>
+        <circle cx="183" cy="89" r="39" fill="#f9a8d4" opacity="0.18"/>
+        <circle cx="154" cy="161" r="44" fill="rgba(255,255,255,0.14)"/><circle cx="228" cy="197" r="34" fill="#f9a8d4" opacity="0.28"/><circle cx="316" cy="175" r="52" fill="rgba(255,255,255,0.08)"/><path d="M106 239C154 199 212 201 264 239" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="10" stroke-linecap="round"/>
+        <rect y="164" width="480" height="106" fill="url(#panel-92)"/>
+        <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
+        <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">HYPERPOP</text>
+        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">ЭТО СЛИШКОМ ЯРКО</tspan><tspan x="24" dy="22">ЧТОБЫ</tspan></text>
+        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">перегруз здесь только</tspan></text>
+        <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">✦</text>
+      </svg>
+    

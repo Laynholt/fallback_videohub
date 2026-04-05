@@ -20,7 +20,7 @@
   function renderRelated(relatedCards) {
     const relatedRoot = byId('relatedVideos');
     if (!relatedCards.length) {
-      relatedRoot.innerHTML = '<div class="related-empty">Похожие видео появятся после следующей публикации.</div>';
+      relatedRoot.innerHTML = '<div class="related-empty">Похожие релизы появятся после следующей публикации.</div>';
       return;
     }
 
@@ -30,7 +30,7 @@
         <div class="related-copy">
           <a href="${buildPlayerUrl(card.id)}"><strong>${escapeHtml(card.title)}</strong></a>
           <a class="related-author" href="${buildChannelUrl(card.author)}">${escapeHtml(card.author)}</a>
-          <span>${escapeHtml(card.views)} просмотров · ${escapeHtml(card.date)}</span>
+          <span>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</span>
         </div>
       </article>
     `).join('');
@@ -44,13 +44,13 @@
   }
 
   function renderMissingState() {
-    document.title = 'Видео не найдено — REMOVI';
-    byId('playerTitle').textContent = 'Видео не найдено';
-    byId('playerMeta').textContent = 'Похоже, ссылка устарела или ролик был скрыт.';
+    document.title = 'Релиз не найден — REMOVI';
+    byId('playerTitle').textContent = 'Релиз не найден';
+    byId('playerMeta').textContent = 'Похоже, ссылка устарела или релиз был скрыт.';
     byId('playerAuthor').textContent = 'REMOVI';
     byId('playerAuthorLink').removeAttribute('href');
     byId('playerAvatar').textContent = 'R';
-    byId('playerDescription').textContent = 'Попробуйте вернуться в каталог и открыть другой ролик.';
+    byId('playerDescription').textContent = 'Попробуйте вернуться в каталог и открыть другой релиз.';
     renderRelated([]);
   }
 
@@ -225,14 +225,14 @@
         return;
       }
 
-      document.title = `${card.title} — REMOVI Video`;
+      document.title = `${card.title} — REMOVI Audio`;
       byId('playerPoster').src = card.previewStatic;
       byId('playerPoster').alt = card.title;
       byId('playerPoster').addEventListener('error', () => {
         if (card.previewFallbackStatic) byId('playerPoster').src = card.previewFallbackStatic;
       });
       byId('playerTitle').textContent = card.title;
-      byId('playerMeta').textContent = `${card.author} · ${card.views} просмотров · ${card.date} · ${card.categoryLabel}`;
+      byId('playerMeta').textContent = `${card.author} · ${card.views} прослушиваний · ${card.date} · ${card.categoryLabel}`;
       byId('playerAvatar').textContent = card.avatar;
       byId('playerAuthor').textContent = card.author;
       byId('playerAuthorLink').href = buildChannelUrl(card.author);

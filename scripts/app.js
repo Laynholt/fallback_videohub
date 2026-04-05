@@ -89,7 +89,7 @@
         <div class="avatar">${escapeHtml(card.avatar)}</div>
         <div class="card-text">
           <div class="card-title">${escapeHtml(card.title)}</div>
-          <div class="card-meta"><a class="author-link" href="${buildChannelUrl(card.author)}" onclick="openChannel(event, decodeURIComponent('${encodeURIComponent(card.author)}'))">${escapeHtml(card.author)}</a><br>${escapeHtml(card.views)} просмотров · ${escapeHtml(card.date)}</div>
+          <div class="card-meta"><a class="author-link" href="${buildChannelUrl(card.author)}" onclick="openChannel(event, decodeURIComponent('${encodeURIComponent(card.author)}'))">${escapeHtml(card.author)}</a><br>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</div>
         </div>
       </div>
     `;
@@ -103,11 +103,11 @@
 
   function renderEmptyState() {
     const queryText = currentQuery ? `по запросу «${currentQuery}»` : 'в этой подборке';
-    renderMessageState('Ничего не найдено', `Сейчас нет видео ${queryText}. Попробуйте сменить фильтр или формулировку поиска.`);
+    renderMessageState('Ничего не найдено', `Сейчас нет релизов ${queryText}. Попробуйте сменить жанр или формулировку поиска.`);
   }
 
   function renderLoadError() {
-    renderMessageState('Каталог недоступен', 'Сейчас не удалось загрузить видео с сервера. Проверьте, что локальный API запущен, и обновите страницу.');
+    renderMessageState('Каталог недоступен', 'Сейчас не удалось загрузить релизы с сервера. Проверьте, что локальный API запущен, и обновите страницу.');
   }
 
   function canLoadMore() {
