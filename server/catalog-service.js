@@ -225,6 +225,8 @@ function stableCatalogSort(cards) {
 
 function serializeCard(card, options = {}) {
   const includeExcerpt = options.includeExcerpt === true;
+  const previewStatic = String(card.previewStatic).startsWith('/') ? card.previewStatic : `/${card.previewStatic}`;
+  const previewFallbackStatic = String(card.previewFallbackStatic).startsWith('/') ? card.previewFallbackStatic : `/${card.previewFallbackStatic}`;
   return {
     id: card.id,
     title: card.title,
@@ -236,8 +238,8 @@ function serializeCard(card, options = {}) {
     quality: card.quality,
     category: card.category,
     categoryLabel: card.categoryLabel,
-    previewStatic: card.previewStatic,
-    previewFallbackStatic: card.previewFallbackStatic,
+    previewStatic,
+    previewFallbackStatic,
     ...(includeExcerpt ? { playerExcerpt: card.playerExcerpt } : {})
   };
 }
