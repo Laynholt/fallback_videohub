@@ -9,13 +9,12 @@
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-94)"/>
-        <circle cx="229" cy="79" r="33" fill="#d1d5db" opacity="0.18"/>
-        <path d="M72 245L126 175L188 237L244 185L316 243L390 169" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="251" width="372" height="12" rx="6" fill="rgba(255,255,255,0.12)"/>
+        <circle cx="144" cy="106" r="38" fill="#d1d5db" opacity="0.18"/>
+        <path d="M72 240L126 170L188 232L244 180L316 238L390 164" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="246" width="372" height="12" rx="6" fill="rgba(255,255,255,0.12)"/>
         <rect y="164" width="480" height="106" fill="url(#panel-94)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">TRAP</text>
-        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">НОЧНОЙ TRAP В</tspan><tspan x="24" dy="22">ЧИСТОМ</tspan></text>
-        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">весь вес в одном низе</tspan></text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Late Code</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">▲</text>
       </svg>
     

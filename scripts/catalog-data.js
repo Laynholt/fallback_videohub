@@ -132,42 +132,132 @@
     }
   };
 
-  const PREVIEW_BANK = {
+  const TITLE_BANK = {
     ambient: {
-      heads: ['ЭТО СЛИШКОМ КРАСИВО ДЛЯ ФОНА', 'ЭТОТ ТРЕК УСПОКАИВАЕТ СРАЗУ', 'ОДИН ПАД И УЖЕ ТИШЕ'],
-      subs: ['после этого комната звучит иначе', 'здесь воздух важнее бита', 'трек держится на чистом пространстве']
+      ru: {
+        nouns: ['Тихий дрейф', 'Северный свет', 'Пустой перрон', 'Синий воздух', 'Белый шум', 'Медленный горизонт'],
+        tails: ['после дождя', 'в пустых окнах', 'без лишних слов', 'под холодным светом', 'у края рассвета', 'в мягком тумане']
+      },
+      en: {
+        nouns: ['Silent Drift', 'Blue Static', 'Soft Horizon', 'Empty Terminal', 'North Delay', 'Glass Morning'],
+        tails: ['after rain', 'under low clouds', 'for quiet rooms', 'before sunrise', 'in slow motion', 'without a signal']
+      },
+      es: {
+        nouns: ['Horizonte Lento', 'Luz del Norte', 'Ruido Blanco', 'Terminal Vacía', 'Marea Suave', 'Niebla Azul'],
+        tails: ['después de la lluvia', 'sin palabras', 'antes del amanecer', 'en la nube baja', 'para cuartos vacíos', 'con aire frío']
+      }
     },
     phonk: {
-      heads: ['ЭТОТ BASS ЛОМАЕТ ТИШИНУ', 'ПОСЛЕ ЭТОГО НУЖЕН НОЧНОЙ ЗАЕЗД', 'ЭТА КАССЕТА ДАВИТ КАК НАДО'],
-      subs: ['грязный кач включается сразу', 'один drop и уже поздно', 'так звучит пустая магистраль']
+      ru: {
+        nouns: ['Кассета без тормозов', 'Чёрный заезд', 'Ночной дым', 'Последний поворот', 'Город без фар', 'Грязный ритм'],
+        tails: ['после полуночи', 'под красным светом', 'на пустой магистрали', 'в режиме дрифта', 'без права на тормоз', 'для холодного асфальта']
+      },
+      en: {
+        nouns: ['Midnight Tire Smoke', 'Last Exit', 'No Mercy Drift', 'Blacktop Ritual', 'Street Pressure', 'Memphis Chrome'],
+        tails: ['after midnight', 'under red lights', 'for the final corner', 'in drift mode', 'with burned bass', 'on empty highways']
+      },
+      pt: {
+        nouns: ['Fumaça da Meia-Noite', 'Saída Final', 'Rua Fantasma', 'Asfalto Quente', 'Queda Sem Freio', 'Ritual de Rua'],
+        tails: ['depois da curva', 'sob luz vermelha', 'na pista vazia', 'sem freio', 'com grave queimado', 'até o amanhecer']
+      }
     },
     hyperpop: {
-      heads: ['ЭТОТ ХУК ВЛЕТАЕТ СРАЗУ', 'ТАКОЙ ПРИПЕВ НЕ ОТПУСКАЕТ', 'ЭТО СЛИШКОМ ЯРКО ЧТОБЫ ПРОПУСТИТЬ'],
-      subs: ['все блестит и ломается вовремя', 'перегруз здесь только украшает', 'треки такого типа цепляют с первой секунды']
+      ru: {
+        nouns: ['Ошибка на танцполе', 'Сахарный сбой', 'Пластиковое сердце', 'Глитч-роман', 'Яркий удар', 'Розовый шум'],
+        tails: ['без режима сна', 'в цифровом блеске', 'после перегруза', 'на пределе света', 'в режиме неона', 'без паузы']
+      },
+      en: {
+        nouns: ['Plastic Hearts', 'Neon Sugar', 'Bubble Damage', 'Mirror Candy', 'Ultra Soft Panic', 'Digital Crush'],
+        tails: ['without sleep mode', 'after the pink crash', 'inside mirror light', 'at full overload', 'for bright errors', 'with chrome vocals']
+      },
+      fr: {
+        nouns: ['Amour Numérique', 'Crash Rose', 'Cœur Plastique', 'Glitch en Soie', 'Lumière Brisée', 'Erreur Pop'],
+        tails: ['sans sommeil', 'dans le flash total', 'après le choc rose', 'en surcharge douce', 'pour la nuit digitale', 'sans silence']
+      }
     },
     house: {
-      heads: ['ЭТОТ ГРУВ РАБОТАЕТ БЕЗ ОШИБОК', 'ПОСЛЕ ЭТОГО ХОЧЕТСЯ ПРОДЛИТЬ НОЧЬ', 'ЧИСТЫЙ HOUSE С ПЕРВОГО УДАРА'],
-      subs: ['ровный кач держит весь трек', 'здесь все собрано вокруг движения', 'так звучит поздний клуб без суеты']
+      ru: {
+        nouns: ['Поздний этаж', 'Тёплый клуб', 'Город дышит ровно', 'Лёгкий кач', 'Ночная стойка', 'Мраморный пол'],
+        tails: ['до самого утра', 'под мягкий свет', 'без суеты', 'для длинного сета', 'на последнем круге', 'под ровный пульс']
+      },
+      en: {
+        nouns: ['Afterhours Lobby', 'Velvet Floor', 'Room Service Groove', 'Late Lift', 'Marble Pulse', 'Soft Club Motion'],
+        tails: ['until sunrise', 'under warm lights', 'for the long fade', 'in one smooth loop', 'after the last drink', 'for rooftop hours']
+      },
+      it: {
+        nouns: ['Casa di Vetro', 'Piano di Notte', 'Groove di Marmo', 'Corridoio Caldo', 'Luce sul Club', 'Ritmo in Ascensore'],
+        tails: ['fino all’alba', 'senza fretta', 'per un set lungo', 'sotto luce calda', 'in un giro morbido', 'dopo l’ultimo brindisi']
+      }
     },
     trap: {
-      heads: ['ЭТОТ 808 СЛИШКОМ ТЯЖЕЛЫЙ', 'ПОСЛЕ ЭТОГО БИТ НЕ ОТПУСТИТ', 'НОЧНОЙ TRAP В ЧИСТОМ ВИДЕ'],
-      subs: ['весь вес в одном низе', 'пауза здесь работает как оружие', 'это звучит холодно и точно']
+      ru: {
+        nouns: ['После полуночи', 'Холодный 808', 'Тёмный балкон', 'Город без сна', 'Чёрный звонок', 'Низкое давление'],
+        tails: ['без лишних слов', 'под ледяной бит', 'для пустых окон', 'на тяжёлом басе', 'после пропущенного вызова', 'в одном длинном вдохе']
+      },
+      en: {
+        nouns: ['Monochrome Flex', 'No Sleep Balcony', 'Black Rain Routine', 'Low Light Prayer', 'Late Code', 'Cold Signal'],
+        tails: ['for low light speakers', 'under black skylines', 'after the missed call', 'with cold 808s', 'without any sleep', 'on heavy bass']
+      },
+      de: {
+        nouns: ['Nachtschicht', 'Schwarzer Anruf', 'Kalter Bass', 'Stadt Ohne Schlaf', 'Dunkler Balkon', 'Tiefe Spannung'],
+        tails: ['nach Mitternacht', 'unter kaltem Licht', 'mit schwerem 808', 'für leere Fenster', 'ohne Pause', 'im schwarzen Regen']
+      }
     },
     cinematic: {
-      heads: ['ТАК ЗВУЧИТ ФИНАЛ БОЛЬШОЙ СЦЕНЫ', 'ЭТОТ SCORE УЖЕ ПРОДАЕТ ФИЛЬМ', 'ПОСЛЕ ЭТОГО НУЖЕН ЦЕЛЫЙ СЮЖЕТ'],
-      subs: ['один трек и уже ощущение титров', 'здесь драма появляется сразу', 'масштаб слышен с первого движения']
+      ru: {
+        nouns: ['Последний кадр', 'Пепел над городом', 'Финал без титров', 'Перед затмением', 'Тихая катастрофа', 'Сцена без слов'],
+        tails: ['для большой сцены', 'перед финальным светом', 'после последнего сигнала', 'в момент развязки', 'для пустого экрана', 'на высокой ноте']
+      },
+      en: {
+        nouns: ['Signal Before The Fall', 'Ashes Over The Observatory', 'Velvet Catastrophe', 'Final Scene', 'Silent Orbit', 'Last Light Before Credits'],
+        tails: ['for a film that does not exist', 'before the title drop', 'after the silent cut', 'for the closing frame', 'at the final cue', 'under broken skies']
+      },
+      es: {
+        nouns: ['Antes del Eclipse', 'La Última Escena', 'Ciudad en Ruinas', 'Caída de Terciopelo', 'Señal Final', 'Silencio Antes del Corte'],
+        tails: ['para una película que no existe', 'antes del plano final', 'después del último corte', 'en la escena decisiva', 'bajo un cielo roto', 'sin diálogo']
+      }
     },
     lofi: {
-      heads: ['ЭТОТ LOOP ВКЛЮЧАЕТ ВЕЧЕР', 'ПОСЛЕ ЭТОГО ХОЧЕТСЯ ЗАКРЫТЬ НОУТ', 'МЯГКИЙ БИТ ДЛЯ ДОЛГОЙ НОЧИ'],
-      subs: ['шорох пленки здесь все решает', 'трек дышит очень спокойно', 'идеально для тихого фонового режима']
+      ru: {
+        nouns: ['Кофе и плёнка', 'Тихий вечер', 'Свет настольной лампы', 'После домашки', 'Мягкий шорох', 'Записка на полях'],
+        tails: ['для долгой ночи', 'под дождь у окна', 'без спешки', 'в тёплой комнате', 'под мягкий бит', 'для тихой переписки']
+      },
+      en: {
+        nouns: ['Rain on the Study Lamp', 'Notebook After Midnight', 'Soft Notes', 'Tape Hiss Evening', 'Quiet Window Loop', 'Late Homework Glow'],
+        tails: ['for quiet evenings', 'under soft rain', 'with tape dust', 'in a warm room', 'for slow focus', 'after midnight']
+      },
+      fr: {
+        nouns: ['Pluie sur le Bureau', 'Lampe du Soir', 'Notes Douces', 'Cassette Calme', 'Fenêtre Tardive', 'Ligne de Cahier'],
+        tails: ['pour la nuit lente', 'sans urgence', 'avec poussière de bande', 'dans la chambre chaude', 'après minuit', 'sous la pluie']
+      }
     },
     techno: {
-      heads: ['ЭТОТ КИК НЕВОЗМОЖНО ИГНОРИРОВАТЬ', 'ПОСЛЕ ЭТОГО СТРОБ БЬЕТ ТОЧНЕЕ', 'ПРЯМОЙ ТЕХНО-УДАР БЕЗ ПАУЗ'],
-      subs: ['ритм тянет дальше сам', 'это чистое давление секвенции', 'складской зал уже слышен']
+      ru: {
+        nouns: ['После третьего строба', 'Стальной импульс', 'Пустой склад', 'Тёмная секвенция', 'Давление ритма', 'Сигнал цеха'],
+        tails: ['без остановки', 'под прямой кик', 'для бетонного зала', 'на холодной скорости', 'до белого шума', 'под промышленный свет']
+      },
+      en: {
+        nouns: ['Control Room Pulse', 'Static Warehouse', 'Impulse 143', 'Night Protocol', 'Machine Pressure', 'Locked Sequence'],
+        tails: ['under pressure lights', 'for the concrete floor', 'in warehouse mode', 'after no sleep', 'at full sequence', 'without a break']
+      },
+      de: {
+        nouns: ['Nachtprotokoll', 'Stahlimpuls', 'Leeres Lager', 'Maschinendruck', 'Sequenz im Dunkeln', 'Signalwerk'],
+        tails: ['ohne Pause', 'unter Drucklicht', 'für Betonhallen', 'nach der Nachtschicht', 'im Lagerraum', 'mit hartem Kick']
+      }
     },
     synthwave: {
-      heads: ['ЭТОТ ТРЕК ПРОСИТ НОЧНОЕ ШОССЕ', 'НЕОН СЛЫШЕН С ПЕРВОЙ НОТЫ', 'ПОСЛЕ ЭТОГО ХОЧЕТСЯ ЕХАТЬ ДАЛЬШЕ'],
-      subs: ['ностальгия включается моментально', 'весь трек светится фиолетовым', 'это уже саундтрек к ночному городу']
+      ru: {
+        nouns: ['Неоновый отель', 'Фиолетовое шоссе', 'Город после заката', 'Последний драйв', 'Свет в зеркале', 'Ночной горизонт'],
+        tails: ['без конца', 'под розовый свет', 'для пустой трассы', 'на скорости света', 'после захода солнца', 'в неоновом тумане']
+      },
+      en: {
+        nouns: ['Sunset Error 1987', 'Afterglow Driver', 'Tokyo Mirage Night', 'Violet Highway', 'Neon Motel', 'Chrome Horizon'],
+        tails: ['for the last night drive', 'under a pink skyline', 'after the city fades', 'with chrome nostalgia', 'for empty highways', 'in neon haze']
+      },
+      es: {
+        nouns: ['Velocidad Rosa', 'Hotel Neón', 'Horizonte Violeta', 'Último Drive', 'Ciudad de Espejos', 'Ruta Después del Sol'],
+        tails: ['para la autopista vacía', 'bajo cielo rosa', 'con nostalgia de neón', 'después del atardecer', 'sin final', 'en niebla violeta']
+      }
     }
   };
 
@@ -248,20 +338,20 @@
   }
 
   function buildTitle(category, localIndex, id) {
-    const source = GENRE_COPY[category];
+    const languageBank = TITLE_BANK[category] || TITLE_BANK.lofi;
     const seed = hashString(`${category}-${localIndex}-${id}`);
-    const action = pick(source.actions, seed);
-    const subject = source.subjects[localIndex % source.subjects.length];
+    const languages = Object.keys(languageBank);
+    const language = languages[seed % languages.length];
+    const source = languageBank[language];
+    const noun = source.nouns[localIndex % source.nouns.length];
     const tail = pick(source.tails, seed >>> 2, localIndex);
-    const style = pick(source.styles, seed >>> 4, id);
     const templates = [
-      `${subject} / ${style}`,
-      `${action} ${subject} ${tail}`,
-      `${subject} ${tail}`,
-      `${subject}: ${style}`,
-      `${action} ${subject}`
+      `${noun}`,
+      `${noun} ${tail}`,
+      `${noun}: ${tail}`,
+      `${tail} — ${noun}`
     ];
-    return clampText(templates[id % templates.length], 104);
+    return clampText(templates[(seed >>> 4) % templates.length], 60);
   }
 
   function buildTopicPhrase(title, category) {
@@ -270,11 +360,9 @@
   }
 
   function buildPreviewCopy(title, category, id) {
-    const bank = PREVIEW_BANK[category] || PREVIEW_BANK.lofi;
-    const seed = hashString(`${title}-${category}-${id}`);
     return {
-      headline: clampText(bank.heads[seed % bank.heads.length], 30),
-      subline: clampText(bank.subs[(seed >>> 3) % bank.subs.length], 34)
+      headline: clampText(title, 60),
+      subline: ''
     };
   }
 
@@ -378,11 +466,8 @@
     const theme = CATEGORY_THEMES[card.category];
     const seed = hashString(`${card.id}-${card.title}-${card.author}`);
     const previewCopy = buildPreviewCopy(card.title, card.category, card.id);
-    const headlineLines = splitPreviewText(previewCopy.headline, 18, 2);
-    const sublineLines = splitPreviewText(previewCopy.subline, headlineLines.length > 1 ? 24 : 30, 1);
-    const headlineSvg = renderSvgLines(headlineLines, 24, 198, { size: 19, weight: 800, lineHeight: 22 });
-    const sublineY = 226 + ((headlineLines.length - 1) * 22);
-    const sublineSvg = renderSvgLines(sublineLines, 24, sublineY, { size: 13, weight: 600, fill: 'rgba(248,250,252,0.92)' });
+    const titleLines = splitPreviewText(previewCopy.headline, 18, 3);
+    const titleSvg = renderSvgLines(titleLines, 24, 192, { size: 18, weight: 800, lineHeight: 21 });
     return `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -399,8 +484,7 @@
         <rect y="164" width="480" height="106" fill="url(#panel-${card.id})"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">${escapeHtml(theme.label.toUpperCase())}</text>
-        ${headlineSvg}
-        ${sublineSvg}
+        ${titleSvg}
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">${escapeHtml(theme.mark)}</text>
       </svg>
     `;

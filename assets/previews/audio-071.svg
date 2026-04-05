@@ -9,13 +9,12 @@
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-71)"/>
-        <circle cx="123" cy="85" r="35" fill="#f472b6" opacity="0.18"/>
-        <circle cx="344" cy="155" r="56" fill="rgba(255,255,255,0.12)"/><path d="M92 237H402" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M120 171L168 219L222 161L278 213L334 153" fill="none" stroke="#f472b6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="252" cy="102" r="34" fill="#f472b6" opacity="0.18"/>
+        <circle cx="344" cy="144" r="56" fill="rgba(255,255,255,0.12)"/><path d="M92 226H402" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M120 160L168 208L222 150L278 202L334 142" fill="none" stroke="#f472b6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
         <rect y="164" width="480" height="106" fill="url(#panel-71)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">SYNTHWAVE</text>
-        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">НЕОН СЛЫШЕН С</tspan><tspan x="24" dy="22">ПЕРВОЙ</tspan></text>
-        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">это уже саундтрек к</tspan></text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Hotel Neón:</tspan><tspan x="24" dy="21">después del</tspan><tspan x="24" dy="21">atardecer</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">◎</text>
       </svg>
     

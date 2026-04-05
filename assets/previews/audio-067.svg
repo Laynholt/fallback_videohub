@@ -9,13 +9,12 @@
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-67)"/>
-        <circle cx="340" cy="78" r="30" fill="#d1d5db" opacity="0.18"/>
-        <path d="M72 236L126 166L188 228L244 176L316 234L390 160" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="242" width="372" height="12" rx="6" fill="rgba(255,255,255,0.12)"/>
+        <circle cx="131" cy="93" r="37" fill="#d1d5db" opacity="0.18"/>
+        <path d="M72 247L126 177L188 239L244 187L316 245L390 171" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="54" y="253" width="372" height="12" rx="6" fill="rgba(255,255,255,0.12)"/>
         <rect y="164" width="480" height="106" fill="url(#panel-67)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">TRAP</text>
-        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">ПОСЛЕ ЭТОГО БИТ НЕ</tspan><tspan x="24" dy="22">ОТПУСТИТ</tspan></text>
-        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">пауза здесь работает как</tspan></text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">No Sleep Balcony</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">▲</text>
       </svg>
     

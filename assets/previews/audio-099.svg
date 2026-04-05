@@ -9,13 +9,12 @@
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-99)"/>
-        <circle cx="337" cy="75" r="37" fill="#7dd3fc" opacity="0.18"/>
-        <path d="M0 181C88 125 176 119 248 149S404 195 480 161V270H0Z" fill="rgba(255,255,255,0.1)"/><path d="M42 147C104 117 182 129 246 151" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="104" cy="66" r="40" fill="#7dd3fc" opacity="0.18"/>
+        <path d="M0 188C88 132 176 126 248 156S404 202 480 168V270H0Z" fill="rgba(255,255,255,0.1)"/><path d="M42 154C104 124 182 136 246 158" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="8" stroke-linecap="round"/>
         <rect y="164" width="480" height="106" fill="url(#panel-99)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">AMBIENT</text>
-        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">ЭТО СЛИШКОМ</tspan><tspan x="24" dy="22">КРАСИВО</tspan></text>
-        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">здесь воздух важнее бита</tspan></text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Glass Morning</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">☁</text>
       </svg>
     

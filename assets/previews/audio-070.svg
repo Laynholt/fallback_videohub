@@ -9,13 +9,12 @@
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-70)"/>
-        <circle cx="295" cy="89" r="35" fill="#67e8f9" opacity="0.18"/>
-        <circle cx="194" cy="187" r="54" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="10"/><circle cx="194" cy="187" r="26" fill="rgba(255,255,255,0.14)"/><path d="M274 147H404M274 187H438M274 227H404" fill="none" stroke="#67e8f9" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="240" cy="90" r="40" fill="#67e8f9" opacity="0.18"/>
+        <circle cx="194" cy="192" r="54" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="10"/><circle cx="194" cy="192" r="26" fill="rgba(255,255,255,0.14)"/><path d="M274 152H404M274 192H438M274 232H404" fill="none" stroke="#67e8f9" stroke-width="8" stroke-linecap="round"/>
         <rect y="164" width="480" height="106" fill="url(#panel-70)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
         <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">TECHNO</text>
-        <text x="24" y="198" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="19" font-weight="800"><tspan x="24" dy="0">ПРЯМОЙ ТЕХНО-УДАР</tspan><tspan x="24" dy="22">БЕЗ</tspan></text>
-        <text x="24" y="248" fill="rgba(248,250,252,0.92)" fill-opacity="1" font-family="Arial, sans-serif" font-size="13" font-weight="600"><tspan x="24" dy="0">ритм тянет дальше сам</tspan></text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Static Warehouse</tspan><tspan x="24" dy="21">after no sleep</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">⌘</text>
       </svg>
     
