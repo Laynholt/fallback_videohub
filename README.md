@@ -1,4 +1,8 @@
-# REMOVI Deploy
+# fallback_videohub
+
+Репозиторий: `https://github.com/Laynholt/fallback_videohub.git`
+
+Проект поднимает видеохаб REMOVI через `Node.js + nginx + Docker Compose`.
 
 ## Что требуется
 
@@ -8,8 +12,8 @@
 ## Первый запуск
 
 ```bash
-git clone <URL_РЕПОЗИТОРИЯ> removi
-cd removi
+git clone https://github.com/Laynholt/fallback_videohub.git
+cd fallback_videohub
 cp .env.example .env
 docker compose up -d --build
 ```
@@ -45,7 +49,7 @@ docker compose up -d --build
 ## Обновление проекта
 
 ```bash
-cd removi
+cd fallback_videohub
 git pull
 docker compose up -d --build
 ```
@@ -109,6 +113,16 @@ docker compose up -d --build
 - [Dockerfile](/f:/Data/Code/JavaScript/Fallback/Dockerfile) — собирает контейнер приложения
 - [nginx.conf](/f:/Data/Code/JavaScript/Fallback/nginx.conf) — проксирует запросы в Node
 - [server.js](/f:/Data/Code/JavaScript/Fallback/server.js) — отдает HTML, статику и API
+
+## Маршруты
+
+Пользовательские URL работают без `.html`:
+
+- `/`
+- `/video/:id`
+- `/channel/:author`
+
+Старые ссылки вида `player.html?id=...` и `channel.html?author=...` автоматически редиректятся на новые адреса.
 
 ## Базовая диагностика
 

@@ -11,6 +11,8 @@
   }
 
   function getRequestedId() {
+    const match = window.location.pathname.match(/^\/video\/([^/]+)$/);
+    if (match) return decodeURIComponent(match[1]);
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
   }

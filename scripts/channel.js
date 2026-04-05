@@ -10,6 +10,8 @@
   }
 
   function getAuthorFromLocation() {
+    const match = window.location.pathname.match(/^\/channel\/([^/]+)$/);
+    if (match) return decodeURIComponent(match[1]);
     const params = new URLSearchParams(window.location.search);
     return params.get('author') || '';
   }

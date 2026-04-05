@@ -45,11 +45,11 @@
   }
 
   function buildPlayerUrl(cardId) {
-    return `player.html?id=${cardId}`;
+    return `/video/${encodeURIComponent(cardId)}`;
   }
 
   function buildChannelUrl(author) {
-    return `channel.html?author=${encodeURIComponent(author)}`;
+    return `/channel/${encodeURIComponent(author)}`;
   }
 
   async function fetchJson(url) {

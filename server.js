@@ -64,9 +64,21 @@ function sendText(response, statusCode, message) {
   response.end(message);
 }
 
+function redirect(response, location) {
+  response.writeHead(302, { Location: location });
+  response.end();
+}
+
 function safeJoin(root, targetPath) {
   const resolved = path.resolve(root, `.${targetPath}`);
   return resolved.startsWith(root) ? resolved : null;
+}
+
+function resolvePagePath(pathname) {
+  if (pathname === '/' || pathname === '/index.html') return '/index.html';
+  if (pathname.startsWith('/video/')) return '/player.html';
+  if (pathname.startsWith('/channel/')) return '/channel.html';
+  return pathname;
 }
 
 function serveFile(response, pathname) {
@@ -80,7 +92,7 @@ function serveFile(response, pathname) {
     return;
   }
 
-  const normalizedPath = pathname === '/' ? '/index.html' : pathname;
+  const normalizedPath = resolvePagePath(pathname);
   const filePath = safeJoin(ROOT, normalizedPath);
   if (!filePath || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     sendText(response, 404, 'Not found');
@@ -128,15 +140,37 @@ function handleApi(requestUrl, response) {
 function createServer() {
   return http.createServer((request, response) => {
     const requestUrl = new URL(request.url, 'http://localhost');
+    const pathname = requestUrl.pathname;
 
-    if (requestUrl.pathname.startsWith('/api/')) {
+    if (pathname.startsWith('/api/')) {
       if (!handleApi(requestUrl, response)) {
         sendJson(response, 404, { error: 'Not found' });
       }
       return;
     }
 
-    serveFile(response, requestUrl.pathname);
+    if (pathname === '/index.html') {
+      redirect(response, '/');
+      return;
+    }
+
+    if (pathname === '/player.html') {
+      const id = requestUrl.searchParams.get('id');
+      if (id) {
+        redirect(response, `/video/${encodeURIComponent(id)}`);
+        return;
+      }
+    }
+
+    if (pathname === '/channel.html') {
+      const author = requestUrl.searchParams.get('author');
+      if (author) {
+        redirect(response, `/channel/${encodeURIComponent(author)}`);
+        return;
+      }
+    }
+
+    serveFile(response, pathname);
   });
 }
 
