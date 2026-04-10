@@ -36,4 +36,4 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
       - ${CERT_FULLCHAIN_PATH}:/etc/nginx/certs/fullchain.pem:ro
-      - ${CERT_PRIVKEY_PATH}:/etc/nginx/certs/priv.key:ro
+      - ${CERT_PRIVKEY_PATH}:/etc/nginx/certs/privkey.pem:ro
