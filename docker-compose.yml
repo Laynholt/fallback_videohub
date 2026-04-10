@@ -8,9 +8,9 @@ services:
     env_file:
       - .env
     environment:
-      PORT: "${PORT}"
+      PORT: "${APP_PORT}"
     expose:
-      - "${PORT}"
+      - "${APP_PORT}"
 
   nginx:
     image: nginx:latest
@@ -19,14 +19,21 @@ services:
     depends_on:
       - app
     ports:
-      - "${NGINX_BIND_IP}:${NGINX_PORT}:${NGINX_PORT}"
+      - "127.0.0.1:${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}"
+      - "${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}"
+    expose:
+      - "${NGINX_HTTPS_PORT}"
     environment:
-      APP_PORT: "${PORT}"
-      NGINX_PORT: "${NGINX_PORT}"
+      APP_PORT: "${APP_PORT}"
+      NGINX_HTTPS_PORT: "${NGINX_HTTPS_PORT}"
+      NGINX_HTTP_PORT: "${NGINX_HTTP_PORT}"
+      SITE_DOMAIN: "${SITE_DOMAIN}"
     command: >
-      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_PORT'
+      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$NGINX_HTTP_PORT $$SITE_DOMAIN'
       < /etc/nginx/templates/nginx.conf.template
       > /etc/nginx/nginx.conf
       && nginx -g 'daemon off;'"
     volumes:
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
+      - ${CERT_FULLCHAIN_PATH}:/etc/nginx/certs/fullchain.pem:ro
+      - ${CERT_PRIVKEY_PATH}:/etc/nginx/certs/priv.key:ro

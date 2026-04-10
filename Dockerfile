@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY . .
 
-ENV PORT=3000
+ENV PORT=8085
 
-EXPOSE 3000
-
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node server.js"]
