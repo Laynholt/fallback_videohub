@@ -6,6 +6,7 @@ const { URL } = require('url');
 const {
   getCatalogPage,
   getChannelPayload,
+  getVideoPublicIdByNumericId,
   getVideoPayload
 } = require('./server/catalog-service');
 
@@ -95,27 +96,26 @@ function buildErrorPage({ statusCode, title, description, actionLabel = 'На г
 <title>${statusCode} — ${escapeHtml(title)}</title>
 <style>
   :root{
-    --bg:#0a0a0c;--surface:#17171f;--border:#2a2a38;--accent:#e8610a;--accent2:#ff8c42;
-    --text:#f0eee8;--text2:#9b98a5;
+    --bg:#0e0f10;--surface:#14161a;--border:#30343a;--accent:#c87941;--accent2:#d8a46d;
+    --text:#f3efe7;--text2:#aaa39a;
   }
   *{box-sizing:border-box}
   body{
     margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;
     background:
-      radial-gradient(circle at top right, rgba(232,97,10,.16), transparent 28%),
-      radial-gradient(circle at bottom left, rgba(92,105,255,.1), transparent 22%),
-      var(--bg);
+      radial-gradient(circle at top right, rgba(216,164,109,.13), transparent 28%),
+      linear-gradient(145deg,#0e0f10 0%,#111417 58%,#15120f 100%);
     color:var(--text);
     font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   }
   .card{
     width:min(100%,640px);padding:32px 28px;border-radius:24px;
-    background:linear-gradient(160deg, rgba(17,17,21,.96), rgba(24,24,31,.98));
+    background:linear-gradient(160deg, rgba(20,22,26,.96), rgba(28,30,34,.98));
     border:1px solid rgba(255,255,255,.08);
     box-shadow:0 24px 72px rgba(0,0,0,.45);
   }
   .brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:18px;color:var(--accent2);font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-  .brand-mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:14px}
+  .brand-mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#18120d;font-size:14px}
   .status{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--text2);margin-bottom:12px}
   h1{margin:0 0 12px;font-size:clamp(34px,5vw,58px);line-height:.96;letter-spacing:-.04em}
   p{margin:0 0 24px;color:var(--text2);font-size:16px;line-height:1.65;max-width:52ch}
@@ -135,7 +135,7 @@ function buildErrorPage({ statusCode, title, description, actionLabel = 'На г
 </head>
 <body>
   <section class="card">
-    <div class="brand"><span class="brand-mark">▶</span><span>REMOVI</span></div>
+    <div class="brand"><span class="brand-mark">R</span><span>REMOVI</span></div>
     <div class="status">Ошибка ${statusCode}</div>
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(description)}</p>
@@ -251,7 +251,7 @@ function createServer() {
       if (pathname === '/player.html') {
         const id = requestUrl.searchParams.get('id');
         if (id) {
-          redirect(response, `/video/${encodeURIComponent(id)}`);
+          redirect(response, `/video/${encodeURIComponent(getVideoPublicIdByNumericId(id) || id)}`);
           return;
         }
       }

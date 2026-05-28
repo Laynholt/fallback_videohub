@@ -19,16 +19,16 @@
   ];
 
   const CATEGORY_THEMES = {
-    all: { label: 'Все', colors: ['#111115', '#252532'], accent: '#ff8c42', mark: '◉' },
-    ambient: { label: 'Ambient', colors: ['#0c1422', '#234d64'], accent: '#7dd3fc', mark: '☁' },
-    phonk: { label: 'Phonk', colors: ['#120c12', '#6b1d1d'], accent: '#fb7185', mark: '◈' },
-    hyperpop: { label: 'Hyperpop', colors: ['#1a1020', '#db2777'], accent: '#f9a8d4', mark: '✦' },
-    house: { label: 'House', colors: ['#1a120d', '#ea580c'], accent: '#fdba74', mark: '▣' },
-    trap: { label: 'Trap', colors: ['#111418', '#374151'], accent: '#d1d5db', mark: '▲' },
-    cinematic: { label: 'Cinematic', colors: ['#120f0d', '#7c2d12'], accent: '#f59e0b', mark: '▶' },
-    lofi: { label: 'Lo-Fi', colors: ['#16131c', '#475569'], accent: '#c4b5fd', mark: '◌' },
-    techno: { label: 'Techno', colors: ['#07131b', '#0f766e'], accent: '#67e8f9', mark: '⌘' },
-    synthwave: { label: 'Synthwave', colors: ['#170f1f', '#7e22ce'], accent: '#f472b6', mark: '◎' }
+    all: { label: 'Все', colors: ['#121417', '#2a2520'], accent: '#d49a63', mark: '◉' },
+    ambient: { label: 'Ambient', colors: ['#0e1519', '#263844'], accent: '#9dc8d8', mark: '☁' },
+    phonk: { label: 'Phonk', colors: ['#171113', '#3b2020'], accent: '#cf6f73', mark: '◈' },
+    hyperpop: { label: 'Hyperpop', colors: ['#17131a', '#4b2d48'], accent: '#d697bb', mark: '✦' },
+    house: { label: 'House', colors: ['#171410', '#5b3b23'], accent: '#d49a63', mark: '▣' },
+    trap: { label: 'Trap', colors: ['#111417', '#2f343a'], accent: '#bfc4c7', mark: '▲' },
+    cinematic: { label: 'Cinematic', colors: ['#16130f', '#4f3320'], accent: '#d6a45d', mark: '▶' },
+    lofi: { label: 'Lo-Fi', colors: ['#16141a', '#38404a'], accent: '#c6b8dd', mark: '◌' },
+    techno: { label: 'Techno', colors: ['#0b1418', '#214642'], accent: '#8fcfc5', mark: '⌘' },
+    synthwave: { label: 'Synthwave', colors: ['#17131a', '#432f55'], accent: '#c98daf', mark: '◎' }
   };
 
   function normalizeText(value) {

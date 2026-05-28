@@ -130,7 +130,7 @@ function serializeCard(card, options = {}) {
   const previewStatic = String(card.previewStatic).startsWith('/') ? card.previewStatic : `/${card.previewStatic}`;
   const previewFallbackStatic = String(card.previewFallbackStatic).startsWith('/') ? card.previewFallbackStatic : `/${card.previewFallbackStatic}`;
   return {
-    id: card.id,
+    id: card.publicId,
     title: card.title,
     author: card.author,
     avatar: card.avatar,
@@ -204,7 +204,14 @@ function getCatalogPage({ filter = 'all', query = '', offset = 0, limit = SETTIN
 }
 
 function findExactCard(cardId) {
-  return ALL_CARDS.find((card) => String(card.id) === String(cardId)) || null;
+  return ALL_CARDS.find((card) => String(card.publicId) === String(cardId)) || null;
+}
+
+function getVideoPublicIdByNumericId(cardId) {
+  const normalizedId = String(cardId || '');
+  if (!/^\d+$/.test(normalizedId)) return null;
+  const card = ALL_CARDS.find((entry) => String(entry.id) === normalizedId);
+  return card ? card.publicId : null;
 }
 
 function buildChannelDescription(author, cards) {
@@ -280,5 +287,6 @@ module.exports = {
   SETTINGS,
   getCatalogPage,
   getChannelPayload,
+  getVideoPublicIdByNumericId,
   getVideoPayload
 };
