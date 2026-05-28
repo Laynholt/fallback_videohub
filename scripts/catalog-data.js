@@ -1,5 +1,7 @@
 (function () {
   const SETTINGS = { initial: 30, batch: 10, max: 60 };
+  const CATALOG_SIZE = 200;
+  const VIDEO_ID_SALT = 'removi-public-video-id-v1';
   const DEFAULT_MESSAGES = {
     login: '⚠ Неверный логин или пароль',
     register: '⚠ Пожалуйста, заполните все поля'
@@ -19,16 +21,16 @@
   ];
 
   const CATEGORY_THEMES = {
-    all: { label: 'Все', colors: ['#111115', '#252532'], accent: '#ff8c42', mark: '◉' },
-    ambient: { label: 'Ambient', colors: ['#0c1422', '#234d64'], accent: '#7dd3fc', mark: '☁' },
-    phonk: { label: 'Phonk', colors: ['#120c12', '#6b1d1d'], accent: '#fb7185', mark: '◈' },
-    hyperpop: { label: 'Hyperpop', colors: ['#1a1020', '#db2777'], accent: '#f9a8d4', mark: '✦' },
-    house: { label: 'House', colors: ['#1a120d', '#ea580c'], accent: '#fdba74', mark: '▣' },
-    trap: { label: 'Trap', colors: ['#111418', '#374151'], accent: '#d1d5db', mark: '▲' },
-    cinematic: { label: 'Cinematic', colors: ['#120f0d', '#7c2d12'], accent: '#f59e0b', mark: '▶' },
-    lofi: { label: 'Lo-Fi', colors: ['#16131c', '#475569'], accent: '#c4b5fd', mark: '◌' },
-    techno: { label: 'Techno', colors: ['#07131b', '#0f766e'], accent: '#67e8f9', mark: '⌘' },
-    synthwave: { label: 'Synthwave', colors: ['#170f1f', '#7e22ce'], accent: '#f472b6', mark: '◎' }
+    all: { label: 'Все', colors: ['#121417', '#2a2520'], accent: '#d49a63', mark: '◉' },
+    ambient: { label: 'Ambient', colors: ['#0e1519', '#263844'], accent: '#9dc8d8', mark: '☁' },
+    phonk: { label: 'Phonk', colors: ['#171113', '#3b2020'], accent: '#cf6f73', mark: '◈' },
+    hyperpop: { label: 'Hyperpop', colors: ['#17131a', '#4b2d48'], accent: '#d697bb', mark: '✦' },
+    house: { label: 'House', colors: ['#171410', '#5b3b23'], accent: '#d49a63', mark: '▣' },
+    trap: { label: 'Trap', colors: ['#111417', '#2f343a'], accent: '#bfc4c7', mark: '▲' },
+    cinematic: { label: 'Cinematic', colors: ['#16130f', '#4f3320'], accent: '#d6a45d', mark: '▶' },
+    lofi: { label: 'Lo-Fi', colors: ['#16141a', '#38404a'], accent: '#c6b8dd', mark: '◌' },
+    techno: { label: 'Techno', colors: ['#0b1418', '#214642'], accent: '#8fcfc5', mark: '⌘' },
+    synthwave: { label: 'Synthwave', colors: ['#17131a', '#432f55'], accent: '#c98daf', mark: '◎' }
   };
 
   const STOP_WORDS = new Set([
@@ -38,10 +40,10 @@
   ]);
 
   const AUTHOR_PARTS = {
-    first: ['Ari', 'Mila', 'Naomi', 'Yuto', 'Sora', 'Noa', 'Lina', 'Matteo', 'Léo', 'Ivy', 'Mira', 'Akira', 'Elio', 'Kira', 'Nina', 'Taiga', 'Clara', 'Noor', 'Yana', 'Rin'],
-    last: ['Vale', 'Sato', 'Marlow', 'Noir', 'Kline', 'Aster', 'Velour', 'Mori', 'Bloom', 'Serrin', 'Kestrel', 'Ibarra', 'Vega', 'Solari', 'Drift', 'Lune', 'Ortega', 'Sable'],
-    nickLeft: ['midnight', 'sub', 'nova', 'silk', 'drift', 'echo', 'mono', 'lucid', 'static', 'velvet', 'broken', 'night', 'haze', 'zero', 'chrome', 'after'],
-    nickRight: ['signal', 'child', 'routine', 'club', 'season', 'cassette', 'district', 'mirror', 'engine', 'hotel', 'archive', 'tempo', 'vista', 'driver', 'shape', 'room']
+    first: ['Ari', 'Mila', 'Naomi', 'Yuto', 'Sora', 'Noa', 'Lina', 'Matteo', 'Léo', 'Ivy', 'Mira', 'Akira', 'Elio', 'Kira', 'Nina', 'Taiga', 'Clara', 'Noor', 'Yana', 'Rin', 'Vera', 'Miko', 'Theo', 'Uma', 'Kai', 'Lea', 'Rafi', 'Iris'],
+    last: ['Vale', 'Sato', 'Marlow', 'Noir', 'Kline', 'Aster', 'Velour', 'Mori', 'Bloom', 'Serrin', 'Kestrel', 'Ibarra', 'Vega', 'Solari', 'Drift', 'Lune', 'Ortega', 'Sable', 'Hale', 'Rune', 'Voss', 'Grey', 'Maven', 'Stone'],
+    nickLeft: ['midnight', 'sub', 'nova', 'silk', 'drift', 'echo', 'mono', 'lucid', 'static', 'velvet', 'broken', 'night', 'haze', 'zero', 'chrome', 'after', 'signal', 'soft', 'minor', 'pulse', 'ghost', 'phase'],
+    nickRight: ['signal', 'child', 'routine', 'club', 'season', 'cassette', 'district', 'mirror', 'engine', 'hotel', 'archive', 'tempo', 'vista', 'driver', 'shape', 'room', 'station', 'index', 'relay', 'method', 'circle', 'memory']
   };
 
   const DATES = ['2 часа назад', '5 часов назад', 'вчера', '2 дня назад', '3 дня назад', 'неделю назад', '2 недели назад', 'месяц назад', '2 месяца назад'];
@@ -270,6 +272,12 @@
     return hash >>> 0;
   }
 
+  function buildVideoSlug(id) {
+    const left = hashString(`${VIDEO_ID_SALT}:${id}:left`).toString(36).padStart(7, '0');
+    const right = hashString(`${VIDEO_ID_SALT}:${id}:right`).toString(36).padStart(7, '0');
+    return `${left}${right}`.slice(0, 12);
+  }
+
   function normalizeText(value) {
     return String(value || '').toLowerCase().replace(/ё/g, 'е');
   }
@@ -487,12 +495,12 @@
         ${titleSvg}
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">${escapeHtml(theme.mark)}</text>
       </svg>
-    `;
+    `.trim() + '\n';
   }
 
-  const durationPool = buildDurationPool(120);
+  const durationPool = buildDurationPool(CATALOG_SIZE);
   const counters = Object.fromEntries(CATEGORY_SEQUENCE.map((category) => [category, 0]));
-  const ALL_CARDS = Array.from({ length: 100 }, (_, id) => {
+  const ALL_CARDS = Array.from({ length: CATALOG_SIZE }, (_, id) => {
     const category = CATEGORY_SEQUENCE[id % CATEGORY_SEQUENCE.length];
     const localIndex = counters[category];
     counters[category] += 1;
@@ -502,6 +510,7 @@
     const date = DATES[id % DATES.length];
     return {
       id,
+      publicId: buildVideoSlug(id),
       title,
       author,
       avatar: buildAvatar(author),
@@ -528,7 +537,7 @@
   }
 
   function findCardById(cardId) {
-    return ALL_CARDS.find((card) => String(card.id) === String(cardId)) || ALL_CARDS[0];
+    return ALL_CARDS.find((card) => String(card.publicId) === String(cardId)) || ALL_CARDS[0];
   }
 
   function findCardsByAuthor(author) {
@@ -545,6 +554,7 @@
     buildChannelUrl,
     buildLocalPreviewPath,
     buildPlayerUrl,
+    buildVideoSlug,
     buildPreviewSvgMarkup,
     clampText,
     escapeHtml,

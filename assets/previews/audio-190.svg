@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="bg-190" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#171113"/><stop offset="100%" stop-color="#3b2020"/>
+          </linearGradient>
+          <linearGradient id="panel-190" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="rgba(6,8,12,0.94)"/><stop offset="100%" stop-color="rgba(6,8,12,0.02)"/>
+          </linearGradient>
+        </defs>
+        <rect width="480" height="270" fill="url(#bg-190)"/>
+        <circle cx="259" cy="109" r="31" fill="#cf6f73" opacity="0.18"/>
+        <rect x="46" y="169" width="388" height="52" rx="18" fill="rgba(8,8,12,0.56)"/><path d="M76 203L138 179L204 187L276 163L344 199" fill="none" stroke="#cf6f73" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="384" cy="193" r="30" fill="rgba(255,255,255,0.1)"/>
+        <rect y="164" width="480" height="106" fill="url(#panel-190)"/>
+        <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
+        <text x="70" y="34" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1">PHONK</text>
+        <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Asfalto Quente</tspan><tspan x="24" dy="21">depois da curva</tspan></text>
+        <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">◈</text>
+      </svg>

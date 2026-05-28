@@ -23,3 +23,6 @@ coverage/
 
 docker-data/
 
+.codex-run/
+.superpowers/
+.playwright-mcp/

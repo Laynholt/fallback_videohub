@@ -1,15 +1,14 @@
-
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="bg-81" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#0c1422"/><stop offset="100%" stop-color="#234d64"/>
+            <stop offset="0%" stop-color="#0e1519"/><stop offset="100%" stop-color="#263844"/>
           </linearGradient>
           <linearGradient id="panel-81" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0%" stop-color="rgba(6,8,12,0.94)"/><stop offset="100%" stop-color="rgba(6,8,12,0.02)"/>
           </linearGradient>
         </defs>
         <rect width="480" height="270" fill="url(#bg-81)"/>
-        <circle cx="320" cy="58" r="40" fill="#7dd3fc" opacity="0.18"/>
+        <circle cx="300" cy="94" r="38" fill="#9dc8d8" opacity="0.18"/>
         <path d="M0 184C88 128 176 122 248 152S404 198 480 164V270H0Z" fill="rgba(255,255,255,0.1)"/><path d="M42 150C104 120 182 132 246 154" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="8" stroke-linecap="round"/>
         <rect y="164" width="480" height="106" fill="url(#panel-81)"/>
         <rect x="18" y="18" width="104" height="24" rx="12" fill="rgba(10,10,12,0.42)" stroke="rgba(255,255,255,0.08)"/>
@@ -17,4 +16,3 @@
         <text x="24" y="192" fill="#f8fafc" fill-opacity="1" font-family="Arial, sans-serif" font-size="18" font-weight="800"><tspan x="24" dy="0">Terminal Vacía</tspan></text>
         <text x="430" y="244" fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="22" text-anchor="end">☁</text>
       </svg>
-    
