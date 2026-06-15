@@ -321,11 +321,11 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
 <body>
 
 <!-- ── Drawer overlay (mobile) ── -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-overlay" id="drawerOverlay"></div>
 
 <!-- ── First visit overlay ── -->
 <div class="welcome-overlay" id="welcomeOverlay" aria-hidden="true">
-  <div class="welcome-card" onclick="stopModalPropagation(event)" onmousedown="stopModalPropagation(event)" ontouchstart="stopModalPropagation(event)">
+  <div class="welcome-card">
     <div class="welcome-kicker">AI Audio Hub</div>
     <h2>REMOVI хранит композиции, созданные нейросетями</h2>
     <p>Это каталог сгенерированных композиций. Для прослушивания полных релизов и доступа к персональным функциям нужен аккаунт.</p>
@@ -334,37 +334,37 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
       <div class="welcome-point"><span class="welcome-dot"></span><span><strong>Для полного доступа ко всем релизам и подборкам потребуется аккаунт.</strong></span></div>
     </div>
     <div class="welcome-actions">
-      <button class="btn-primary" type="button" onclick="openWelcomeAuth('login')">Войти</button>
-      <button class="btn-ghost" type="button" onclick="dismissWelcomeOverlay()">Войти позже</button>
+      <button class="btn-primary" type="button" id="welcomeLoginBtn">Войти</button>
+      <button class="btn-ghost" type="button" id="welcomeDismissBtn">Войти позже</button>
     </div>
   </div>
 </div>
 
 <!-- ════ SIDEBAR ════ -->
 <aside class="sidebar" id="sidebar">
-  <div class="logo" onclick="reloadPage()">
+  <div class="logo" id="sidebarLogo">
     <div class="logo-icon">R</div>
     <span class="logo-text">REMOVI</span>
   </div>
 
   <nav class="nav-section">
-    <div class="nav-item active" onclick="navClick(this)">
+    <div class="nav-item active">
       <div class="nav-icon">⌂</div><span class="nav-text">Главная</span>
       <div class="slim-tip">Главная</div>
     </div>
-    <div class="nav-item" onclick="navClick(this)">
+    <div class="nav-item">
       <div class="nav-icon">↟</div><span class="nav-text">Популярное</span>
       <div class="slim-tip">Популярное</div>
     </div>
-    <div class="nav-item" onclick="navClick(this)">
+    <div class="nav-item">
       <div class="nav-icon">✦</div><span class="nav-text">Новинки</span>
       <div class="slim-tip">Новинки</div>
     </div>
-    <div class="nav-item" onclick="navClick(this)">
+    <div class="nav-item">
       <div class="nav-icon">◷</div><span class="nav-text">История</span>
       <div class="slim-tip">История</div>
     </div>
-    <div class="nav-item" onclick="navClick(this)">
+    <div class="nav-item">
       <div class="nav-icon">◈</div><span class="nav-text">Избранное</span>
       <div class="slim-tip">Избранное</div>
     </div>
@@ -374,21 +374,21 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
 
   <nav class="nav-section">
     <div class="nav-label">Жанры</div>
-    <div class="nav-item active" data-category="all" onclick="navClick(this)"><div class="nav-icon">◉</div><span class="nav-text">Все релизы</span><div class="slim-tip">Все релизы</div></div>
-    <div class="nav-item" data-category="ambient" onclick="navClick(this)"><div class="nav-icon">≈</div><span class="nav-text">Ambient</span><div class="slim-tip">Ambient</div></div>
-    <div class="nav-item" data-category="phonk" onclick="navClick(this)"><div class="nav-icon">◇</div><span class="nav-text">Phonk</span><div class="slim-tip">Phonk</div></div>
-    <div class="nav-item" data-category="hyperpop" onclick="navClick(this)"><div class="nav-icon">✦</div><span class="nav-text">Hyperpop</span><div class="slim-tip">Hyperpop</div></div>
-    <div class="nav-item" data-category="house" onclick="navClick(this)"><div class="nav-icon">▣</div><span class="nav-text">House</span><div class="slim-tip">House</div></div>
-    <div class="nav-item" data-category="trap" onclick="navClick(this)"><div class="nav-icon">△</div><span class="nav-text">Trap</span><div class="slim-tip">Trap</div></div>
-    <div class="nav-item" data-category="cinematic" onclick="navClick(this)"><div class="nav-icon">▻</div><span class="nav-text">Cinematic</span><div class="slim-tip">Cinematic</div></div>
-    <div class="nav-item" data-category="lofi" onclick="navClick(this)"><div class="nav-icon">◐</div><span class="nav-text">Lo-Fi</span><div class="slim-tip">Lo-Fi</div></div>
-    <div class="nav-item" data-category="techno" onclick="navClick(this)"><div class="nav-icon">⌘</div><span class="nav-text">Techno</span><div class="slim-tip">Techno</div></div>
-    <div class="nav-item" data-category="synthwave" onclick="navClick(this)"><div class="nav-icon">▱</div><span class="nav-text">Synthwave</span><div class="slim-tip">Synthwave</div></div>
+    <div class="nav-item active" data-category="all"><div class="nav-icon">◉</div><span class="nav-text">Все релизы</span><div class="slim-tip">Все релизы</div></div>
+    <div class="nav-item" data-category="ambient"><div class="nav-icon">≈</div><span class="nav-text">Ambient</span><div class="slim-tip">Ambient</div></div>
+    <div class="nav-item" data-category="phonk"><div class="nav-icon">◇</div><span class="nav-text">Phonk</span><div class="slim-tip">Phonk</div></div>
+    <div class="nav-item" data-category="hyperpop"><div class="nav-icon">✦</div><span class="nav-text">Hyperpop</span><div class="slim-tip">Hyperpop</div></div>
+    <div class="nav-item" data-category="house"><div class="nav-icon">▣</div><span class="nav-text">House</span><div class="slim-tip">House</div></div>
+    <div class="nav-item" data-category="trap"><div class="nav-icon">△</div><span class="nav-text">Trap</span><div class="slim-tip">Trap</div></div>
+    <div class="nav-item" data-category="cinematic"><div class="nav-icon">▻</div><span class="nav-text">Cinematic</span><div class="slim-tip">Cinematic</div></div>
+    <div class="nav-item" data-category="lofi"><div class="nav-icon">◐</div><span class="nav-text">Lo-Fi</span><div class="slim-tip">Lo-Fi</div></div>
+    <div class="nav-item" data-category="techno"><div class="nav-icon">⌘</div><span class="nav-text">Techno</span><div class="slim-tip">Techno</div></div>
+    <div class="nav-item" data-category="synthwave"><div class="nav-icon">▱</div><span class="nav-text">Synthwave</span><div class="slim-tip">Synthwave</div></div>
   </nav>
 
   <div class="sidebar-divider"></div>
   <div class="sidebar-footer">
-    <button class="auth-sidebar-btn" onclick="openModal('login')">
+    <button class="auth-sidebar-btn" type="button" id="sidebarAuthBtn">
       <span class="btn-icon">◉</span><span class="btn-text">Войти</span>
     </button>
   </div>
@@ -399,10 +399,10 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <button class="hamburger" onclick="toggleDrawer()" aria-label="Открыть меню">
+    <button class="hamburger" type="button" id="drawerToggle" aria-label="Открыть меню">
       <span></span><span></span><span></span>
     </button>
-    <div class="topbar-logo" onclick="reloadPage()">REMOVI</div>
+    <div class="topbar-logo" id="topbarLogo">REMOVI</div>
 
     <div class="search-wrap">
       <input class="search-input" type="text" placeholder="Найти трек или автора..." id="searchInput" autocomplete="off">
@@ -410,10 +410,10 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
     </div>
 
     <div class="topbar-actions">
-      <div class="search-toggle" onclick="toggleMobileSearch()">⌕</div>
-      <div class="icon-btn icon-notif" onclick="requireAuth()" title="Уведомления">◌</div>
-      <div class="icon-btn" onclick="requireAuth()" title="Загрузить трек">＋</div>
-      <div class="icon-btn" onclick="openModal('login')" title="Профиль">◉</div>
+      <div class="search-toggle" id="mobileSearchToggle">⌕</div>
+      <div class="icon-btn icon-notif" id="topNotificationsBtn" title="Уведомления">◌</div>
+      <div class="icon-btn" id="topUploadBtn" title="Загрузить трек">＋</div>
+      <div class="icon-btn" id="topProfileBtn" title="Профиль">◉</div>
     </div>
   </header>
 
@@ -421,7 +421,7 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
   <div class="mobile-search-bar" id="mobileSearchBar">
     <div class="msb-inner">
       <input type="search" placeholder="Найти трек или автора..." autocomplete="off" id="mobileSearchInput">
-      <button class="msb-close" onclick="toggleMobileSearch()">✕</button>
+      <button class="msb-close" type="button" id="mobileSearchClose">✕</button>
     </div>
   </div>
 
@@ -439,8 +439,8 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
     <h2>Хочешь <em>больше</em>?</h2>
     <p>Войдите или зарегистрируйтесь — это бесплатно и займёт минуту.</p>
     <div class="auth-gate-btns">
-      <button class="btn-primary" onclick="openModal('register')">Зарегистрироваться</button>
-      <button class="btn-ghost" onclick="openModal('login')">Войти</button>
+      <button class="btn-primary" type="button" id="authGateRegisterBtn">Зарегистрироваться</button>
+      <button class="btn-ghost" type="button" id="authGateLoginBtn">Войти</button>
     </div>
   </div>
 </main>
@@ -448,38 +448,38 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
 <!-- ════ BOTTOM NAV ════ -->
 <nav class="bottom-nav" aria-label="Мобильная навигация">
   <div class="bnav-inner">
-    <button class="bnav-item active" onclick="bnavClick(this,'home')">
+    <button class="bnav-item active" type="button" data-bnav="home">
       <span class="bnav-icon">⌂</span><span class="bnav-label">Главная</span>
     </button>
-    <button class="bnav-item" onclick="bnavClick(this,'popular')">
+    <button class="bnav-item" type="button" data-bnav="popular">
       <span class="bnav-icon">↟</span><span class="bnav-label">Топ</span>
     </button>
-    <button class="bnav-item" onclick="bnavClick(this,'menu')">
+    <button class="bnav-item" type="button" data-bnav="menu">
       <span class="bnav-icon">☰</span><span class="bnav-label">Меню</span>
     </button>
-    <button class="bnav-item" onclick="bnavClick(this,'notif')">
+    <button class="bnav-item" type="button" data-bnav="notif">
       <span class="bnav-icon">◌</span><span class="bnav-label">Уведомл.</span>
     </button>
-    <button class="bnav-item" onclick="bnavClick(this,'profile')">
+    <button class="bnav-item" type="button" data-bnav="profile">
       <span class="bnav-icon">◉</span><span class="bnav-label">Профиль</span>
     </button>
   </div>
 </nav>
 
 <!-- ════ MODAL ════ -->
-<div class="modal-overlay" id="modalOverlay" onclick="overlayClose(event)" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" onclick="stopModalPropagation(event)" onmousedown="stopModalPropagation(event)" ontouchstart="stopModalPropagation(event)">
+<div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
     <div class="modal-handle"></div>
-    <button class="modal-close" type="button" onclick="closeModal()">✕</button>
+    <button class="modal-close" type="button" id="modalCloseBtn">✕</button>
     <div class="modal-logo" id="authModalTitle">REMOVI</div>
     <p class="modal-sub">Твой контент. Твои правила.</p>
     <div class="modal-tabs">
-      <div class="modal-tab active" id="tabLogin" onclick="switchTab('login')">Войти</div>
-      <div class="modal-tab" id="tabRegister" onclick="switchTab('register')">Регистрация</div>
+      <div class="modal-tab active" id="tabLogin">Войти</div>
+      <div class="modal-tab" id="tabRegister">Регистрация</div>
     </div>
 
     <!-- LOGIN -->
-    <form id="formLogin" class="auth-form" novalidate onsubmit="event.preventDefault();doLogin();">
+    <form id="formLogin" class="auth-form" novalidate>
       <div class="form-group">
         <label class="form-label">Логин или Email</label>
         <input class="form-input" type="text" placeholder="your@email.com" id="loginEmail" autocomplete="username">
@@ -493,7 +493,7 @@ body{background:radial-gradient(circle at 88% -12%,rgba(216,164,109,.10),transpa
     </form>
 
     <!-- REGISTER -->
-    <form id="formRegister" class="auth-form" novalidate onsubmit="event.preventDefault();doRegister();" hidden>
+    <form id="formRegister" class="auth-form" novalidate hidden>
       <div class="form-group">
         <label class="form-label">Номер телефона</label>
         <input class="form-input" type="tel" placeholder="+7 (___) ___-__-__" id="regPhone" autocomplete="tel" inputmode="tel">

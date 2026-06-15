@@ -2,12 +2,18 @@
   const {
     buildChannelUrl,
     buildPlayerUrl,
-    escapeHtml,
     fetchVideo
   } = window.REMOVI_CLIENT;
 
   function byId(id) {
     return document.getElementById(id);
+  }
+
+  function createTextElement(tagName, className, text) {
+    const element = document.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = text;
+    return element;
   }
 
   function getRequestedId() {
@@ -24,23 +30,39 @@
       return;
     }
 
-    relatedRoot.innerHTML = relatedCards.map((card) => `
-      <article class="related-item">
-        <a href="${buildPlayerUrl(card.id)}"><img class="related-thumb" src="${card.previewStatic}" alt="${escapeHtml(card.title)}"></a>
-        <div class="related-copy">
-          <a href="${buildPlayerUrl(card.id)}"><strong>${escapeHtml(card.title)}</strong></a>
-          <a class="related-author" href="${buildChannelUrl(card.author)}">${escapeHtml(card.author)}</a>
-          <span>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</span>
-        </div>
-      </article>
-    `).join('');
+    const items = relatedCards.map((card) => {
+      const article = document.createElement('article');
+      article.className = 'related-item';
 
-    relatedRoot.querySelectorAll('.related-thumb').forEach((image, index) => {
-      const card = relatedCards[index];
+      const imageLink = document.createElement('a');
+      imageLink.href = buildPlayerUrl(card.id);
+      const image = document.createElement('img');
+      image.className = 'related-thumb';
+      image.src = card.previewStatic;
+      image.alt = card.title;
       image.addEventListener('error', () => {
         if (card.previewFallbackStatic) image.src = card.previewFallbackStatic;
       });
+      imageLink.appendChild(image);
+
+      const copy = document.createElement('div');
+      copy.className = 'related-copy';
+      const titleLink = document.createElement('a');
+      titleLink.href = buildPlayerUrl(card.id);
+      titleLink.appendChild(createTextElement('strong', '', card.title));
+      const authorLink = createTextElement('a', 'related-author', card.author);
+      authorLink.href = buildChannelUrl(card.author);
+      copy.append(
+        titleLink,
+        authorLink,
+        createTextElement('span', '', `${card.views} прослушиваний · ${card.date}`)
+      );
+
+      article.append(imageLink, copy);
+      return article;
     });
+
+    relatedRoot.replaceChildren(...items);
   }
 
   function renderMissingState() {

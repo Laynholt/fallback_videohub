@@ -36,6 +36,8 @@ const DATE_ORDER = [
 ];
 
 const DATE_RANK = new Map(DATE_ORDER.map((label, index) => [label, index]));
+const PREVIEW_PLACEHOLDER = '/assets/previews/audio-000.svg';
+const PREVIEW_PATH_PATTERN = /^\/assets\/previews\/(?:audio|video)-\d{3}\.svg$/;
 
 const CHANNEL_BIO_BANK = {
   ambient: {
@@ -125,10 +127,16 @@ function seededCatalogSort(cards, seed) {
   });
 }
 
+function normalizePreviewPath(value) {
+  const rawPath = String(value || '').trim();
+  const previewPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+  return PREVIEW_PATH_PATTERN.test(previewPath) ? previewPath : PREVIEW_PLACEHOLDER;
+}
+
 function serializeCard(card, options = {}) {
   const includeExcerpt = options.includeExcerpt === true;
-  const previewStatic = String(card.previewStatic).startsWith('/') ? card.previewStatic : `/${card.previewStatic}`;
-  const previewFallbackStatic = String(card.previewFallbackStatic).startsWith('/') ? card.previewFallbackStatic : `/${card.previewFallbackStatic}`;
+  const previewStatic = normalizePreviewPath(card.previewStatic);
+  const previewFallbackStatic = normalizePreviewPath(card.previewFallbackStatic);
   return {
     id: card.publicId,
     title: card.title,
