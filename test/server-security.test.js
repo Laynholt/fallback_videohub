@@ -193,3 +193,77 @@ test('continues serving the intended public app surface', async () => {
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
   }
 });
+
+test('serves browser security headers on public HTML, scripts, API, and errors', async () => {
+  const fixtureRoot = createFixture();
+  const createServer = loadCreateServer(fixtureRoot);
+  const server = createServer();
+  const listener = await listen(server);
+
+  try {
+    const checks = [
+      '/',
+      '/index.html',
+      '/player.html?id=0',
+      '/scripts/app.js',
+      '/assets/previews/audio-000.svg',
+      '/api/catalog?limit=1',
+      '/does-not-exist.js',
+      '/gone.html'
+    ];
+
+    for (const requestPath of checks) {
+      const res = await request(listener.port, requestPath);
+      const csp = res.headers['content-security-policy'] || '';
+      assert.match(csp, /default-src 'self'/, `${requestPath} should set CSP default-src`);
+      assert.match(csp, /script-src 'self'(?:;|$)/, `${requestPath} should disallow inline scripts`);
+      assert.match(csp, /object-src 'none'/, `${requestPath} should block plugins`);
+      assert.match(csp, /frame-ancestors 'none'/, `${requestPath} should block framing`);
+      assert.match(csp, /base-uri 'self'/, `${requestPath} should restrict base URI`);
+      assert.equal(res.headers['x-content-type-options'], 'nosniff', `${requestPath} should set nosniff`);
+      assert.equal(res.headers['x-frame-options'], 'DENY', `${requestPath} should deny framing`);
+      assert.equal(res.headers['referrer-policy'], 'strict-origin-when-cross-origin', `${requestPath} should set referrer policy`);
+      assert.match(res.headers['permissions-policy'] || '', /camera=\(\)/, `${requestPath} should disable camera permission`);
+    }
+  } finally {
+    await listener.close();
+    unloadFixtureModules(fixtureRoot);
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('client pages and scripts do not require inline JavaScript under CSP', () => {
+  const files = [
+    'index.html',
+    'player.html',
+    'channel.html',
+    'scripts/app.js',
+    'scripts/channel.js',
+    'scripts/player.js'
+  ];
+
+  for (const relativePath of files) {
+    const source = fs.readFileSync(path.join(root, relativePath), 'utf8');
+    assert.doesNotMatch(source, /\son[a-z]+\s*=/i, `${relativePath} should not contain inline event handlers`);
+    assert.doesNotMatch(source, /javascript:/i, `${relativePath} should not contain javascript: URLs`);
+  }
+});
+
+test('client renderers avoid HTML attribute injection from catalog API fields', () => {
+  const app = fs.readFileSync(path.join(root, 'scripts/app.js'), 'utf8');
+  const channel = fs.readFileSync(path.join(root, 'scripts/channel.js'), 'utf8');
+  const player = fs.readFileSync(path.join(root, 'scripts/player.js'), 'utf8');
+
+  assert.doesNotMatch(app, /onclick="openChannel/i);
+  assert.doesNotMatch(app, /decodeURIComponent\('\$\{encodeURIComponent/);
+  assert.match(app, /authorLink\.addEventListener\('click'/);
+
+  assert.doesNotMatch(channel, /root\.innerHTML\s*=\s*cards\.map/s);
+  assert.doesNotMatch(channel, /onclick="window\.location\.href=/);
+  assert.doesNotMatch(channel, /src="\$\{card\.previewStatic\}"/);
+  assert.match(channel, /document\.createElement\('img'\)/);
+
+  assert.doesNotMatch(player, /relatedRoot\.innerHTML\s*=\s*relatedCards\.map/s);
+  assert.doesNotMatch(player, /src="\$\{card\.previewStatic\}"/);
+  assert.match(player, /document\.createElement\('img'\)/);
+});

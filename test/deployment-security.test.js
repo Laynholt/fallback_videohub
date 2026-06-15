@@ -57,3 +57,21 @@ test('nginx proxy image is immutable because it receives the TLS private key', (
   assert.doesNotMatch(imageMatch[1], /:latest(?:$|@)/);
   assert.match(imageMatch[1], /@sha256:[a-f0-9]{64}$/);
 });
+
+test('nginx sets browser hardening headers on proxied responses', () => {
+  const nginxConfig = fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8');
+  const cspMatch = nginxConfig.match(/add_header\s+Content-Security-Policy\s+"([^"]+)"\s+always;/);
+  const csp = cspMatch ? cspMatch[1] : '';
+  const scriptSrc = csp
+    .split(';')
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith('script-src'));
+
+  assert.ok(cspMatch, 'nginx should set a CSP header with always');
+  assert.equal(scriptSrc, "script-src 'self'");
+  assert.match(nginxConfig, /add_header\s+Strict-Transport-Security\s+"max-age=31536000; includeSubDomains"\s+always;/);
+  assert.match(nginxConfig, /add_header\s+X-Content-Type-Options\s+"nosniff"\s+always;/);
+  assert.match(nginxConfig, /add_header\s+X-Frame-Options\s+"DENY"\s+always;/);
+  assert.match(nginxConfig, /add_header\s+Referrer-Policy\s+"strict-origin-when-cross-origin"\s+always;/);
+  assert.match(nginxConfig, /add_header\s+Permissions-Policy\s+"[^"]*camera=\(\)[^"]*"\s+always;/);
+});
