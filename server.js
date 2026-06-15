@@ -35,6 +35,12 @@ function loadEnvFile() {
 loadEnvFile();
 
 const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC_SCRIPT_PATHS = new Set([
+  '/scripts/app.js',
+  '/scripts/channel.js',
+  '/scripts/client-api.js',
+  '/scripts/player.js'
+]);
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -155,7 +161,7 @@ function sendPrettyError(response, statusCode, title, description) {
 
 function safeJoin(root, targetPath) {
   const resolved = path.resolve(root, `.${targetPath}`);
-  return resolved.startsWith(root) ? resolved : null;
+  return resolved === root || resolved.startsWith(`${root}${path.sep}`) ? resolved : null;
 }
 
 function resolvePagePath(pathname) {
@@ -165,13 +171,20 @@ function resolvePagePath(pathname) {
   return pathname;
 }
 
+function isPublicPreviewPath(pathname) {
+  return pathname.startsWith('/assets/previews/') && path.extname(pathname).toLowerCase() === '.svg';
+}
+
+function isPublicStaticPath(pathname) {
+  if (pathname === '/' || pathname === '/index.html') return true;
+  if (pathname === '/player.html' || pathname === '/channel.html') return true;
+  if (pathname.startsWith('/video/') || pathname.startsWith('/channel/')) return true;
+  if (PUBLIC_SCRIPT_PATHS.has(pathname)) return true;
+  return isPublicPreviewPath(pathname);
+}
+
 function serveFile(response, pathname) {
-  if (
-    pathname === '/scripts/catalog-data.js' ||
-    pathname === '/server.js' ||
-    pathname === '/package.json' ||
-    pathname.startsWith('/server/')
-  ) {
+  if (!isPublicStaticPath(pathname)) {
     sendText(response, 404, 'Not found');
     return;
   }
