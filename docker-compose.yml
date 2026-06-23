@@ -20,20 +20,21 @@ services:
       - app
     ports:
       - "127.0.0.1:${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}"
-      - "${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}"
+      - "80:80"
     expose:
       - "${NGINX_HTTPS_PORT}"
     environment:
       APP_PORT: "${APP_PORT}"
       NGINX_HTTPS_PORT: "${NGINX_HTTPS_PORT}"
-      NGINX_HTTP_PORT: "${NGINX_HTTP_PORT}"
       SITE_DOMAIN: "${SITE_DOMAIN}"
     command: >
-      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$NGINX_HTTP_PORT $$SITE_DOMAIN'
+      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$SITE_DOMAIN'
       < /etc/nginx/templates/nginx.conf.template
       > /etc/nginx/nginx.conf
       && nginx -g 'daemon off;'"
     volumes:
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
+      # ACME HTTP-01 challenge: скрипт пишет на хосте, nginx читает в контейнере
+      - /var/www/acme:/var/www/acme:ro
       - ${CERT_FULLCHAIN_PATH}:/etc/nginx/certs/fullchain.pem:ro
       - ${CERT_PRIVKEY_PATH}:/etc/nginx/certs/privkey.pem:ro
