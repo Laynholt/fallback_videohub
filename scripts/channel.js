@@ -1,6 +1,5 @@
 (function () {
   const {
-    escapeHtml,
     buildPlayerUrl,
     fetchChannel
   } = window.REMOVI_CLIENT;
@@ -16,15 +15,43 @@
     return params.get('author') || '';
   }
 
-  function attachPreviewFallbacks(cards) {
-    document.querySelectorAll('#channelGrid img[data-card-index]').forEach((image) => {
-      const index = Number(image.dataset.cardIndex);
-      const card = cards[index];
-      if (!card) return;
-      image.addEventListener('error', () => {
-        if (card.previewFallbackStatic) image.src = card.previewFallbackStatic;
-      });
+  function createTextElement(tagName, className, text) {
+    const element = document.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = text;
+    return element;
+  }
+
+  function createChannelCard(card) {
+    const article = document.createElement('article');
+    article.className = 'video-card';
+    article.addEventListener('click', () => {
+      window.location.href = buildPlayerUrl(card.id);
     });
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb-wrap';
+    const image = document.createElement('img');
+    image.src = card.previewStatic;
+    image.alt = card.title;
+    image.addEventListener('error', () => {
+      if (card.previewFallbackStatic) image.src = card.previewFallbackStatic;
+    });
+    thumb.append(
+      image,
+      createTextElement('span', 'badge', card.categoryLabel),
+      createTextElement('span', 'duration', card.duration)
+    );
+
+    const copy = document.createElement('div');
+    copy.className = 'card-copy';
+    copy.append(
+      createTextElement('strong', '', card.title),
+      createTextElement('span', '', `${card.views} прослушиваний · ${card.date}`)
+    );
+
+    article.append(thumb, copy);
+    return article;
   }
 
   function renderCards(cards) {
@@ -34,21 +61,7 @@
       return;
     }
 
-    root.innerHTML = cards.map((card, index) => `
-      <article class="video-card" onclick="window.location.href='${buildPlayerUrl(card.id)}'">
-        <div class="thumb-wrap">
-          <img src="${card.previewStatic}" alt="${escapeHtml(card.title)}" data-card-index="${index}">
-          <span class="badge">${escapeHtml(card.categoryLabel)}</span>
-          <span class="duration">${escapeHtml(card.duration)}</span>
-        </div>
-        <div class="card-copy">
-          <strong>${escapeHtml(card.title)}</strong>
-          <span>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</span>
-        </div>
-      </article>
-    `).join('');
-
-    attachPreviewFallbacks(cards);
+    root.replaceChildren(...cards.map((card) => createChannelCard(card)));
   }
 
   function renderMissingChannel(author) {

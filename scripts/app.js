@@ -26,6 +26,18 @@
     return document.getElementById(id);
   }
 
+  function createTextElement(tagName, className, text) {
+    const element = document.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = text;
+    return element;
+  }
+
+  function addClickListener(id, handler) {
+    const element = byId(id);
+    if (element) element.addEventListener('click', handler);
+  }
+
   function syncBodyScrollLock() {
     const overlay = byId('modalOverlay');
     const welcomeOverlay = byId('welcomeOverlay');
@@ -37,11 +49,20 @@
 
   function renderFilterChips() {
     const bar = byId('filterBar');
-    const chips = FILTERS.map((filter) => `<button class="chip${filter.key === currentFilter ? ' active' : ''}" type="button" data-category="${filter.key}" onclick="chipClick(this)">${filter.label}</button>`);
+    bar.replaceChildren();
+    FILTERS.forEach((filter) => {
+      const chip = createTextElement('button', `chip${filter.key === currentFilter ? ' active' : ''}`, filter.label);
+      chip.type = 'button';
+      chip.dataset.category = filter.key;
+      chip.addEventListener('click', () => chipClick(chip));
+      bar.appendChild(chip);
+    });
     if (currentQuery) {
-      chips.push(`<button class="chip searching" type="button" onclick="clearSearch()">Поиск: ${escapeHtml(currentQuery)} ×</button>`);
+      const searchChip = createTextElement('button', 'chip searching', `Поиск: ${currentQuery} ×`);
+      searchChip.type = 'button';
+      searchChip.addEventListener('click', clearSearch);
+      bar.appendChild(searchChip);
     }
-    bar.innerHTML = chips.join('');
   }
 
   function syncSidebarFilterState() {
@@ -67,6 +88,11 @@
     return image;
   }
 
+  function appendBadge(parent, className, text) {
+    if (!text) return;
+    parent.appendChild(createTextElement('span', className, text));
+  }
+
   function renderCard(card, delay) {
     const cardNode = document.createElement('article');
     cardNode.className = 'video-card';
@@ -79,22 +105,29 @@
     const thumb = document.createElement('div');
     thumb.className = 'thumb-wrap';
     thumb.appendChild(createPreviewImage('thumb-static', card.previewStatic, card.title, card.previewFallbackStatic));
-    thumb.insertAdjacentHTML('beforeend', `
-      <span class="category-badge">${escapeHtml(card.categoryLabel)}</span>
-      <span class="duration-badge">${escapeHtml(card.duration)}</span>
-      ${card.quality ? `<span class="quality-badge">${escapeHtml(card.quality)}</span>` : ''}
-    `);
+    appendBadge(thumb, 'category-badge', card.categoryLabel);
+    appendBadge(thumb, 'duration-badge', card.duration);
+    appendBadge(thumb, 'quality-badge', card.quality);
 
-    cardNode.innerHTML = `
-      <div class="card-info">
-        <div class="avatar">${escapeHtml(card.avatar)}</div>
-        <div class="card-text">
-          <div class="card-title">${escapeHtml(card.title)}</div>
-          <div class="card-meta"><a class="author-link" href="${buildChannelUrl(card.author)}" onclick="openChannel(event, decodeURIComponent('${encodeURIComponent(card.author)}'))">${escapeHtml(card.author)}</a><br>${escapeHtml(card.views)} прослушиваний · ${escapeHtml(card.date)}</div>
-        </div>
-      </div>
-    `;
-    cardNode.prepend(thumb);
+    const info = document.createElement('div');
+    info.className = 'card-info';
+    const avatar = createTextElement('div', 'avatar', card.avatar);
+    const text = document.createElement('div');
+    text.className = 'card-text';
+    const title = createTextElement('div', 'card-title', card.title);
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+    const authorLink = createTextElement('a', 'author-link', card.author);
+    authorLink.href = buildChannelUrl(card.author);
+    authorLink.addEventListener('click', (event) => openChannel(event, card.author));
+    meta.append(
+      authorLink,
+      document.createElement('br'),
+      document.createTextNode(`${card.views} прослушиваний · ${card.date}`)
+    );
+    text.append(title, meta);
+    info.append(avatar, text);
+    cardNode.append(thumb, info);
     return cardNode;
   }
 
@@ -574,6 +607,54 @@
     requireAuth();
   }
 
+  function bindStaticControls() {
+    addClickListener('drawerOverlay', closeDrawer);
+    addClickListener('welcomeLoginBtn', () => openWelcomeAuth('login'));
+    addClickListener('welcomeDismissBtn', dismissWelcomeOverlay);
+    addClickListener('sidebarLogo', reloadPage);
+    addClickListener('sidebarAuthBtn', () => openModal('login'));
+    addClickListener('drawerToggle', toggleDrawer);
+    addClickListener('topbarLogo', reloadPage);
+    addClickListener('mobileSearchToggle', toggleMobileSearch);
+    addClickListener('topNotificationsBtn', requireAuth);
+    addClickListener('topUploadBtn', requireAuth);
+    addClickListener('topProfileBtn', () => openModal('login'));
+    addClickListener('mobileSearchClose', toggleMobileSearch);
+    addClickListener('authGateRegisterBtn', () => openModal('register'));
+    addClickListener('authGateLoginBtn', () => openModal('login'));
+    addClickListener('modalCloseBtn', () => closeModal());
+
+    document.querySelectorAll('.nav-item').forEach((item) => {
+      item.addEventListener('click', () => navClick(item));
+    });
+
+    document.querySelectorAll('.bnav-item[data-bnav]').forEach((button) => {
+      button.addEventListener('click', () => bnavClick(button, button.dataset.bnav));
+    });
+
+    const modalOverlay = byId('modalOverlay');
+    modalOverlay.addEventListener('click', overlayClose);
+    modalOverlay.querySelector('.modal').addEventListener('click', stopModalPropagation);
+    modalOverlay.querySelector('.modal').addEventListener('mousedown', stopModalPropagation);
+    modalOverlay.querySelector('.modal').addEventListener('touchstart', stopModalPropagation);
+
+    const welcomeCard = byId('welcomeOverlay').querySelector('.welcome-card');
+    welcomeCard.addEventListener('click', stopModalPropagation);
+    welcomeCard.addEventListener('mousedown', stopModalPropagation);
+    welcomeCard.addEventListener('touchstart', stopModalPropagation);
+
+    byId('tabLogin').addEventListener('click', () => switchTab('login'));
+    byId('tabRegister').addEventListener('click', () => switchTab('register'));
+    byId('formLogin').addEventListener('submit', (event) => {
+      event.preventDefault();
+      doLogin();
+    });
+    byId('formRegister').addEventListener('submit', (event) => {
+      event.preventDefault();
+      doRegister();
+    });
+  }
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeModal();
@@ -581,6 +662,7 @@
     }
   });
 
+  bindStaticControls();
   bindRegisterInputs();
   bindSearchInputs();
   renderFilterChips();

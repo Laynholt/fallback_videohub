@@ -35,6 +35,12 @@ function loadEnvFile() {
 loadEnvFile();
 
 const PORT = Number(process.env.PORT) || 3000;
+const PUBLIC_SCRIPT_PATHS = new Set([
+  '/scripts/app.js',
+  '/scripts/channel.js',
+  '/scripts/client-api.js',
+  '/scripts/player.js'
+]);
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -49,6 +55,34 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8'
 };
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'"
+].join('; ');
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': CONTENT_SECURITY_POLICY,
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin'
+};
+
+function withSecurityHeaders(headers = {}) {
+  return {
+    ...SECURITY_HEADERS,
+    ...headers
+  };
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -60,30 +94,30 @@ function escapeHtml(value) {
 }
 
 function sendJson(response, statusCode, payload) {
-  response.writeHead(statusCode, {
+  response.writeHead(statusCode, withSecurityHeaders({
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store'
-  });
+  }));
   response.end(JSON.stringify(payload));
 }
 
 function sendText(response, statusCode, message) {
-  response.writeHead(statusCode, {
+  response.writeHead(statusCode, withSecurityHeaders({
     'Content-Type': 'text/plain; charset=utf-8'
-  });
+  }));
   response.end(message);
 }
 
 function sendHtml(response, statusCode, html) {
-  response.writeHead(statusCode, {
+  response.writeHead(statusCode, withSecurityHeaders({
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-store'
-  });
+  }));
   response.end(html);
 }
 
 function redirect(response, location) {
-  response.writeHead(302, { Location: location });
+  response.writeHead(302, withSecurityHeaders({ Location: location }));
   response.end();
 }
 
@@ -141,7 +175,7 @@ function buildErrorPage({ statusCode, title, description, actionLabel = 'На г
     <p>${escapeHtml(description)}</p>
     <div class="actions">
       <a class="button primary" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>
-      <a class="button ghost" href="javascript:history.back()">Назад</a>
+      <a class="button ghost" href="/">К каталогу</a>
     </div>
     <div class="meta">Если проблема повторяется, проверь адрес или обнови страницу позже.</div>
   </section>
@@ -155,7 +189,7 @@ function sendPrettyError(response, statusCode, title, description) {
 
 function safeJoin(root, targetPath) {
   const resolved = path.resolve(root, `.${targetPath}`);
-  return resolved.startsWith(root) ? resolved : null;
+  return resolved === root || resolved.startsWith(`${root}${path.sep}`) ? resolved : null;
 }
 
 function resolvePagePath(pathname) {
@@ -165,13 +199,20 @@ function resolvePagePath(pathname) {
   return pathname;
 }
 
+function isPublicPreviewPath(pathname) {
+  return pathname.startsWith('/assets/previews/') && path.extname(pathname).toLowerCase() === '.svg';
+}
+
+function isPublicStaticPath(pathname) {
+  if (pathname === '/' || pathname === '/index.html') return true;
+  if (pathname === '/player.html' || pathname === '/channel.html') return true;
+  if (pathname.startsWith('/video/') || pathname.startsWith('/channel/')) return true;
+  if (PUBLIC_SCRIPT_PATHS.has(pathname)) return true;
+  return isPublicPreviewPath(pathname);
+}
+
 function serveFile(response, pathname) {
-  if (
-    pathname === '/scripts/catalog-data.js' ||
-    pathname === '/server.js' ||
-    pathname === '/package.json' ||
-    pathname.startsWith('/server/')
-  ) {
+  if (!isPublicStaticPath(pathname)) {
     sendText(response, 404, 'Not found');
     return;
   }
@@ -193,7 +234,7 @@ function serveFile(response, pathname) {
 
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-  response.writeHead(200, { 'Content-Type': contentType });
+  response.writeHead(200, withSecurityHeaders({ 'Content-Type': contentType }));
   fs.createReadStream(filePath).pipe(response);
 }
 
