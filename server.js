@@ -35,6 +35,8 @@ function loadEnvFile() {
 loadEnvFile();
 
 const PORT = Number(process.env.PORT) || 3000;
+const configuredXhttpPath = (process.env.XHTTP_PATH || '').trim();
+const XHTTP_PATH = configuredXhttpPath !== '/' && /^\/[^?#]+$/.test(configuredXhttpPath) ? configuredXhttpPath : '';
 const PUBLIC_SCRIPT_PATHS = new Set([
   '/scripts/app.js',
   '/scripts/channel.js',
@@ -213,7 +215,7 @@ function isPublicStaticPath(pathname) {
 
 function serveFile(response, pathname) {
   if (!isPublicStaticPath(pathname)) {
-    sendText(response, 404, 'Not found');
+    sendPrettyError(response, 404, 'Страница не найдена', 'Такого экрана больше нет или адрес был введён с ошибкой.');
     return;
   }
 
@@ -276,6 +278,11 @@ function createServer() {
     try {
       const requestUrl = new URL(request.url, 'http://localhost');
       const pathname = requestUrl.pathname;
+
+      if (XHTTP_PATH && pathname === XHTTP_PATH) {
+        sendPrettyError(response, 403, 'Доступ запрещён', 'Этот адрес недоступен для прямого просмотра.');
+        return;
+      }
 
       if (pathname.startsWith('/api/')) {
         if (!handleApi(requestUrl, response)) {

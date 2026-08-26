@@ -163,6 +163,55 @@ test('does not serve sensitive project, deployment, and server files', async () 
   }
 });
 
+test('renders the branded 404 page for unknown browser routes', async () => {
+  const fixtureRoot = createFixture();
+  const createServer = loadCreateServer(fixtureRoot);
+  const server = createServer();
+  const listener = await listen(server);
+
+  try {
+    for (const requestPath of ['/video', '/Videos', '/unknown-path']) {
+      const res = await request(listener.port, requestPath);
+      assert.equal(res.statusCode, 404);
+      assert.match(res.headers['content-type'] || '', /^text\/html/);
+      assert.match(res.body, /REMOVI/);
+      assert.match(res.body, /href="\/"/);
+    }
+  } finally {
+    await listener.close();
+    unloadFixtureModules(fixtureRoot);
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+});
+
+test('matches the configured XHTTP path exactly', async () => {
+  const fixtureRoot = createFixture();
+  const previousXhttpPath = process.env.XHTTP_PATH;
+  delete process.env.XHTTP_PATH;
+  fs.writeFileSync(path.join(fixtureRoot, '.env'), 'XHTTP_PATH=/transport-mask\n');
+  const createServer = loadCreateServer(fixtureRoot);
+  const server = createServer();
+  const listener = await listen(server);
+
+  try {
+    for (const requestPath of ['/transport-mask', '/transport-mask?probe=1']) {
+      const res = await request(listener.port, requestPath);
+      assert.equal(res.statusCode, 403);
+      assert.match(res.headers['content-type'] || '', /^text\/html/);
+      assert.match(res.body, /Доступ запрещён/);
+    }
+
+    const childPath = await request(listener.port, '/transport-mask/child');
+    assert.equal(childPath.statusCode, 404);
+  } finally {
+    await listener.close();
+    unloadFixtureModules(fixtureRoot);
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+    if (previousXhttpPath === undefined) delete process.env.XHTTP_PATH;
+    else process.env.XHTTP_PATH = previousXhttpPath;
+  }
+});
+
 test('continues serving the intended public app surface', async () => {
   const fixtureRoot = createFixture();
   const createServer = loadCreateServer(fixtureRoot);
