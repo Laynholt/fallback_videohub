@@ -6,7 +6,7 @@ const test = require('node:test');
 const root = path.resolve(__dirname, '..');
 
 function getComposeServiceBlock(compose, serviceName) {
-  const serviceMatch = compose.match(new RegExp(`^  ${serviceName}:\\n((?:    .*\\n?)*)`, 'm'));
+  const serviceMatch = compose.replace(/\r\n/g, '\n').match(new RegExp(`^  ${serviceName}:\\n((?:    .*\\n?)*)`, 'm'));
 
   assert.ok(serviceMatch, `docker-compose.yml should include services.${serviceName}`);
   return serviceMatch[1];
@@ -44,7 +44,7 @@ test('http redirect uses the configured canonical domain instead of request Host
   const nginxConfig = fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8');
 
   assert.doesNotMatch(nginxConfig, /https:\/\/\$host\$request_uri/);
-  assert.match(nginxConfig, /return\s+301\s+https:\/\/\$\{SITE_DOMAIN\}\$request_uri;/);
+  assert.match(nginxConfig, /return\s+301\s+https:\/\/\$server_name\$request_uri;/);
 });
 
 test('nginx proxy image is immutable because it receives the TLS private key', () => {
