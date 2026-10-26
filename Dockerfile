@@ -1,4 +1,8 @@
-FROM node:20-alpine
+FROM node:24.22.1-alpine3.24@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+
+# The runtime needs node only; npm/yarn bring unused vulnerable dependencies.
+RUN rm -rf /usr/local/lib/node_modules/npm /opt/yarn-* \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 WORKDIR /app
 
@@ -11,4 +15,4 @@ COPY assets ./assets
 
 ENV PORT=8085
 
-CMD ["sh", "-c", "node server.js"]
+CMD ["node", "server.js"]
