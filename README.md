@@ -100,6 +100,26 @@ node server.js
 /api/catalog?filter=ambient&q=driver&offset=0&limit=30&seed=demo
 ```
 
+## События форм для Mosquito Swatter
+
+Чтобы включить события, добавьте `REMOVI_SWATTER_EVENTS=1` и `REMOVI_PUBLIC_ORIGIN=https://example.com` в файл окружения приложения. Для Mosquito с Compose overlay это файл `REMOVI_ENV_FILE`. Укажите точный адрес из браузера, включая нестандартный внешний порт, без пути и завершающего `/`. Необязательный `REMOVI_INSTANCE_ID` по умолчанию равен `videohub`. При выключенной или неверной настройке, а также при совпадении с `XHTTP_PATH`, сайт продолжит работать без событий.
+
+Четыре демонстрационные формы каталога и страницы релиза дают `decoy_login_attempt` и `decoy_register_attempt` в stdout контейнера `removi_app`. События означают отправку формы. Поля, cookies и `Referer` браузер не отправляет. Приложение использует адрес соединения и игнорирует заголовки переадресации. За частным прокси запись остаётся без атрибуции клиенту. События могут быть пропущены при занятом или недоступном канале записи.
+
+Для разовой проверки вывода под учётной записью с доступом к Docker:
+
+```sh
+docker logs removi_app | jq -Rrc 'fromjson? | select(.schema == "moskit.security.v1")'
+```
+
+Для постоянного сбора направьте отфильтрованные строки в отдельный ротируемый файл через доверенный сборщик. В конфигурации Swatter добавьте объект в `sources` и подставьте путь к файлу:
+
+```json
+{"id":"videohub_forms","type":"file","path":"/var/log/swatter/videohub.jsonl","parser":"security_json","service":"videohub","nft_eligible":false,"trusted_success":false}
+```
+
+Передавайте сообщения JSONL после снятия конверта драйвера Docker. Профиль предназначен для наблюдения.
+
 ## Полезные команды
 
 ```bash
