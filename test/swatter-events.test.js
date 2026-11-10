@@ -15,7 +15,7 @@ async function start(t, env) {
   const child = spawn(process.execPath, ['-e', `
     const server = require('./server.js').createServer();
     server.listen(0, '127.0.0.1', () => console.log(server.address().port));
-  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
+  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_TRUST_PROXY: '0', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
     stdio: ['ignore', 'pipe', 'pipe'] });
   const closed = once(child, 'close');
   t.after(async () => {
@@ -139,4 +139,56 @@ test('Swatter keeps responding after stdout disconnects', { skip: process.platfo
   await fixture.closeOutput();
   assert.equal((await submit(fixture.base, { event: 'login_submit', page: 'catalog' })).status, 204);
   assert.equal((await fetch(fixture.base + '/api/catalog')).status, 200);
+});
+
+test('Swatter rejects invalid envelopes without spending the shared peer quota', { timeout: 20_000 }, async t => {
+  const cases = [
+    ['wrong Origin', {}, 'https://wrong.fixture.test', 403],
+    ['missing Origin', {}, null, 403],
+    ['query', { query: '?x=1' }, origin, 400],
+    ['method', { method: 'OPTIONS' }, origin, 405],
+    ['content type', { type: 'text/plain' }, origin, 415],
+    ['content encoding', { encoding: 'gzip' }, origin, 415],
+    ['declared size', { body: 'x'.repeat(257) }, origin, 413]
+  ];
+  for (const trustProxy of ['0', '1']) {
+    for (const [name, options, from, status] of cases) {
+      await t.test(`${name}, trustProxy=${trustProxy}`, async childTest => {
+        const { base, events } = await start(childTest, { REMOVI_SWATTER_EVENTS: '1', REMOVI_TRUST_PROXY: trustProxy });
+        for (let i = 0; i < 31; i++) {
+          // Same client key as submit(), so a spent quota would block the final valid event.
+          const headers = { 'Content-Type': options.type || 'application/json', 'X-Forwarded-For': '1.1.1.1' };
+          if (from !== null) headers.Origin = from;
+          if (options.encoding) headers['Content-Encoding'] = options.encoding;
+          const response = await fetch(base + '/api/_events' + (options.query || ''), {
+            method: options.method || 'POST', headers, body: options.body || '{}'
+          });
+          assert.equal(response.status, status);
+        }
+        assert.deepEqual(events, []);
+        assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+        for (let i = 0; i < 100 && events.length === 0; i++) await delay(10);
+        assert.equal(events.length, 1);
+        assert.equal(events[0].event, 'decoy_login_attempt');
+        assert.equal(events[0].client_ip, trustProxy === '1' ? '1.1.1.1' : null);
+        assert.equal(events[0].ip_source, trustProxy === '1' ? 'trusted_proxy' : 'unattributed');
+      });
+    }
+  }
+});
+
+test('Swatter still bounds admitted body attempts per shared peer', { timeout: 10_000 }, async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1' });
+  // Invalid bodies consume the same bounded parsing budget as valid events.
+  for (let i = 0; i < 29; i++) {
+    const response = await fetch(base + '/api/_events', {
+      method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: '{'
+    });
+    assert.equal(response.status, 400);
+  }
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 429);
+  for (let i = 0; i < 100 && events.length === 0; i++) await delay(10);
+  assert.equal(events.length, 1);
+  assert.equal((await fetch(base + '/api/catalog')).status, 200);
 });
