@@ -6,6 +6,7 @@ const { performance } = require('node:perf_hooks');
 
 const ENDPOINT = '/api/_events';
 const MAX_BODY_BYTES = 256;
+const MAX_QUEUED_EVENTS = 256;
 const EVENT_NAMES = Object.freeze({ login_submit: 'decoy_login_attempt', register_submit: 'decoy_register_attempt' });
 const PAGES = new Set(['catalog', 'video']);
 
@@ -44,17 +45,35 @@ function createEmitter() {
     // Initializing Node stdio makes a piped descriptor nonblocking.
     void process.stdout;
   } catch { /* The descriptor write reports an unavailable sink. */ }
-  let pending = false;
-  return event => {
-    if (pending) return;
-    pending = true;
+  // Lines wait in a bounded queue so a busy pipe delays events instead of dropping them.
+  const queue = [];
+  let writing = false;
+  function flush() {
+    if (!queue.length) { writing = false; return; }
+    writing = true;
     try {
-      write(1, JSON.stringify(event) + '\n', () => { pending = false; });
-    } catch { pending = false; }
+      write(1, queue[0], error => {
+        if (error?.code === 'EAGAIN') { setTimeout(flush, 50).unref(); return; }
+        queue.shift();
+        flush();
+      });
+    } catch { queue.length = 0; writing = false; }
+  }
+  return event => {
+    if (queue.length >= MAX_QUEUED_EVENTS) return;
+    queue.push(JSON.stringify(event) + '\n');
+    if (!writing) flush();
   };
 }
 
-function createTelemetryHandler(allowedOrigin, instance) {
+// Only a private-network proxy may name the client; its own address stays in peer_ip.
+function proxiedClient(request, peer) {
+  if (publicPeer(peer)) return null;
+  const values = request.headersDistinct['x-real-ip'];
+  return values?.length === 1 ? normalizeIp(values[0].trim()) : null;
+}
+
+function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } = {}) {
   const origin = new URL(allowedOrigin);
   if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== allowedOrigin ||
       !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(instance)) throw new TypeError('Invalid Swatter configuration');
@@ -84,7 +103,9 @@ function createTelemetryHandler(allowedOrigin, instance) {
       request.resume();
     }
     const peer = normalizeIp(request.socket.remoteAddress);
-    if (!peer || !admit(peer)) { reject(429); return true; }
+    const proxied = trustProxy && peer ? proxiedClient(request, peer) : null;
+    const client = proxied || peer;
+    if (!client || !admit(client)) { reject(429); return true; }
     if (request.url !== ENDPOINT) { reject(400); return true; }
     if (request.method !== 'POST') { reject(405); return true; }
     const origins = request.headersDistinct.origin;
@@ -134,10 +155,11 @@ function createTelemetryHandler(allowedOrigin, instance) {
           typeof input.event !== 'string' || !Object.hasOwn(EVENT_NAMES, input.event) || !PAGES.has(input.page)) {
         finish(400); return;
       }
-      const attributable = publicPeer(peer);
+      const attributable = publicPeer(client);
       emit({ schema: 'moskit.security.v1', ts: Date.now() / 1000, event: EVENT_NAMES[input.event],
-        service: 'videohub', instance, peer_ip: peer, client_ip: attributable ? peer : null,
-        ip_source: attributable ? 'transport_peer' : 'unattributed', page: input.page, signal: 'client_reported' });
+        service: 'videohub', instance, peer_ip: peer, client_ip: attributable ? client : null,
+        ip_source: attributable ? (proxied ? 'trusted_proxy' : 'transport_peer') : 'unattributed',
+        page: input.page, signal: 'client_reported' });
       finish(204);
     });
     return true;
