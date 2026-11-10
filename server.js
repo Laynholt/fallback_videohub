@@ -275,15 +275,22 @@ function handleApi(requestUrl, response) {
 }
 
 function loadSwatter() {
-  if (process.env.REMOVI_SWATTER_EVENTS !== '1' || XHTTP_PATH === SWATTER_ENDPOINT) return null;
+  if (process.env.REMOVI_SWATTER_EVENTS !== '1') return null;
+  // Warnings go to stderr so the stdout event stream stays pure JSONL.
+  if (XHTTP_PATH === SWATTER_ENDPOINT) {
+    console.error(`Swatter events disabled: XHTTP_PATH collides with ${SWATTER_ENDPOINT}`);
+    return null;
+  }
   try {
     const clientScript = Buffer.concat([
       fs.readFileSync(path.join(ROOT, 'scripts/client-api.js')),
       fs.readFileSync(path.join(ROOT, 'server/swatter-browser.js'))
     ]);
-    const handle = createTelemetryHandler(process.env.REMOVI_PUBLIC_ORIGIN, process.env.REMOVI_INSTANCE_ID || 'videohub');
+    const handle = createTelemetryHandler(process.env.REMOVI_PUBLIC_ORIGIN, process.env.REMOVI_INSTANCE_ID || 'videohub',
+      { trustProxy: process.env.REMOVI_TRUST_PROXY === '1' });
     return { clientScript, handle };
-  } catch {
+  } catch (error) {
+    console.error(`Swatter events disabled: ${error.message}. Check REMOVI_PUBLIC_ORIGIN and REMOVI_INSTANCE_ID.`);
     return null;
   }
 }
