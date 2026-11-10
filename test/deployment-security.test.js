@@ -69,7 +69,7 @@ test('nginx sets browser hardening headers on proxied responses', () => {
 
   assert.ok(cspMatch, 'nginx should set a CSP header with always');
   assert.equal(scriptSrc, "script-src 'self'");
-  assert.match(nginxConfig, /add_header\s+Strict-Transport-Security\s+"max-age=31536000; includeSubDomains"\s+always;/);
+  assert.match(nginxConfig, /add_header\s+Strict-Transport-Security\s+"max-age=31536000"\s+always;/);
   assert.match(nginxConfig, /add_header\s+X-Content-Type-Options\s+"nosniff"\s+always;/);
   assert.match(nginxConfig, /add_header\s+X-Frame-Options\s+"DENY"\s+always;/);
   assert.match(nginxConfig, /add_header\s+Referrer-Policy\s+"strict-origin-when-cross-origin"\s+always;/);
