@@ -113,20 +113,22 @@ test('Swatter uses the served browser listener and real endpoint for the four de
   assert.equal(events.length, 4);
 });
 
-test('Swatter trusts X-Real-IP only from a private proxy when enabled and limits each client separately', { timeout: 10_000 }, async t => {
+test('Swatter trusts the proxy-written X-Forwarded-For entry only from a private proxy and limits each client separately', { timeout: 10_000 }, async t => {
   const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_TRUST_PROXY: '1' });
   const body = { event: 'login_submit', page: 'catalog' };
-  assert.equal((await submit(base, body)).status, 204);
+  // The client-supplied left entry and X-Real-IP (8.8.8.8 from submit) must be ignored.
+  const via = ip => ({ headers: { 'X-Forwarded-For': `6.6.6.6, ${ip}` } });
+  assert.equal((await submit(base, body, origin, via('1.1.1.1'))).status, 204);
   await waitFor(() => events.length === 1);
   assert.equal(events[0].peer_ip, '127.0.0.1');
-  assert.equal(events[0].client_ip, '8.8.8.8');
+  assert.equal(events[0].client_ip, '1.1.1.1');
   assert.equal(events[0].ip_source, 'trusted_proxy');
 
   // A burst arrives while earlier lines are still being written; none may be lost.
-  const burst = await Promise.all(Array.from({ length: 29 }, () => submit(base, body)));
+  const burst = await Promise.all(Array.from({ length: 29 }, () => submit(base, body, origin, via('1.1.1.1'))));
   assert(burst.every(response => response.status === 204));
-  assert.equal((await submit(base, body)).status, 429);
-  assert.equal((await submit(base, body, origin, { headers: { 'X-Real-IP': '9.9.9.9' } })).status, 204);
+  assert.equal((await submit(base, body, origin, via('1.1.1.1'))).status, 429);
+  assert.equal((await submit(base, body, origin, via('9.9.9.9'))).status, 204);
   await waitFor(() => events.length === 31);
   assert.equal(events.length, 31);
   assert.equal(events.at(-1).client_ip, '9.9.9.9');
