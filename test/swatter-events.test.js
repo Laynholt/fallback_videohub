@@ -156,7 +156,8 @@ test('Swatter rejects invalid envelopes without spending the shared peer quota',
       await t.test(`${name}, trustProxy=${trustProxy}`, async childTest => {
         const { base, events } = await start(childTest, { REMOVI_SWATTER_EVENTS: '1', REMOVI_TRUST_PROXY: trustProxy });
         for (let i = 0; i < 31; i++) {
-          const headers = { 'Content-Type': options.type || 'application/json', 'X-Real-IP': '8.8.8.8' };
+          // Same client key as submit(), so a spent quota would block the final valid event.
+          const headers = { 'Content-Type': options.type || 'application/json', 'X-Forwarded-For': '1.1.1.1' };
           if (from !== null) headers.Origin = from;
           if (options.encoding) headers['Content-Encoding'] = options.encoding;
           const response = await fetch(base + '/api/_events' + (options.query || ''), {
@@ -169,7 +170,7 @@ test('Swatter rejects invalid envelopes without spending the shared peer quota',
         for (let i = 0; i < 100 && events.length === 0; i++) await delay(10);
         assert.equal(events.length, 1);
         assert.equal(events[0].event, 'decoy_login_attempt');
-        assert.equal(events[0].client_ip, trustProxy === '1' ? '8.8.8.8' : null);
+        assert.equal(events[0].client_ip, trustProxy === '1' ? '1.1.1.1' : null);
         assert.equal(events[0].ip_source, trustProxy === '1' ? 'trusted_proxy' : 'unattributed');
       });
     }
