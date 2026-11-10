@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
-const { readFileSync } = require('node:fs');
+const { readFileSync, mkdirSync, mkdtempSync, rmSync, existsSync } = require('node:fs');
 const path = require('node:path');
 const { createInterface } = require('node:readline');
 const test = require('node:test');
@@ -15,7 +15,7 @@ async function start(t, env) {
   const child = spawn(process.execPath, ['-e', `
     const server = require('./server.js').createServer();
     server.listen(0, '127.0.0.1', () => console.log(server.address().port));
-  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_TRUST_PROXY: '0', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
+  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_TRUST_PROXY: '0', REMOVI_TRUSTED_PROXY_IPS: undefined, REMOVI_PUBLIC_ORIGINS: undefined, REMOVI_SWATTER_LOG_DIR: '', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
     stdio: ['ignore', 'pipe', 'pipe'] });
   const closed = once(child, 'close');
   t.after(async () => {
@@ -70,6 +70,61 @@ test('Swatter keeps the original script and endpoint behavior when disabled, inv
       else assert.doesNotMatch(fixture.stderr(), /Swatter/);
     });
   }
+});
+
+test('Swatter accepts only explicitly configured public origins', async t => {
+  const second = origin + ':7443';
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_PUBLIC_ORIGINS: `${origin},${second}` });
+  for (const from of [origin, second]) assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' }, from)).status, 204);
+  for (const from of [origin + ':8443', 'https://wrong.fixture.test', origin + '/']) {
+    assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' }, from)).status, 403);
+  }
+  await waitFor(() => events.length === 2);
+  assert.equal(events.length, 2);
+});
+
+test('Swatter restricts forwarded attribution to configured immediate peers', async t => {
+  for (const [peers, expected] of [['127.0.0.1', '1.1.1.1'], ['::ffff:127.0.0.1', '1.1.1.1'], ['10.0.0.2', null]]) {
+    await t.test(peers, async child => {
+      const { base, events } = await start(child, { REMOVI_SWATTER_EVENTS: '1', REMOVI_TRUST_PROXY: '1', REMOVI_TRUSTED_PROXY_IPS: peers });
+      assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+      await waitFor(() => events.length === 1);
+      assert.equal(events[0].client_ip, expected);
+      assert.equal(events[0].ip_source, expected ? 'trusted_proxy' : 'unattributed');
+    });
+  }
+});
+
+test('Swatter disables events for malformed origin or exact-peer allowlists', async t => {
+  for (const env of [
+    { REMOVI_PUBLIC_ORIGINS: origin + ',https://wrong.fixture.test/path' },
+    { REMOVI_PUBLIC_ORIGINS: origin + ',' },
+    { REMOVI_PUBLIC_ORIGINS: '' },
+    { REMOVI_TRUSTED_PROXY_IPS: '127.0.0.1/8' },
+    { REMOVI_TRUSTED_PROXY_IPS: 'localhost' },
+    { REMOVI_TRUSTED_PROXY_IPS: '', REMOVI_TRUST_PROXY: '1' }
+  ]) {
+    const { base } = await start(t, { REMOVI_SWATTER_EVENTS: '1', ...env });
+    assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 404);
+  }
+});
+
+test('Swatter file output contains only validated event fields', async t => {
+  const scratch = path.join(root, '.tmp');
+  mkdirSync(scratch, { recursive: true });
+  const directory = mkdtempSync(path.join(scratch, 'swatter-log-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_SWATTER_LOG_DIR: directory });
+  const log = path.join(directory, 'events.jsonl');
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog', password: 'never-log-this' })).status, 400);
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+  await waitFor(() => existsSync(log) && readFileSync(log, 'utf8').includes('decoy_login_attempt'));
+  const content = readFileSync(log, 'utf8');
+  assert.doesNotMatch(content, /never-log-this|password/);
+  const lines = content.trim().split('\n').map(JSON.parse);
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].event, 'decoy_login_attempt');
+  assert.deepEqual(events, []);
 });
 
 test('Swatter uses the served browser listener and real endpoint for the four demo forms', { timeout: 10_000 }, async t => {

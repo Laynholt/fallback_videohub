@@ -174,6 +174,16 @@ docker compose logs -f
 
 4. Проверь, что `SITE_DOMAIN`, `NGINX_HTTP_PORT` и `NGINX_HTTPS_PORT` соответствуют твоей схеме доступа.
 
+### Несколько входов и изолированный сбор событий
+
+Для сайта на нескольких HTTPS-портах задайте `REMOVI_PUBLIC_ORIGINS=https://example.com,https://example.com:7443`. Этот явный список заменяет `REMOVI_PUBLIC_ORIGIN`; каждый элемент должен быть точным origin без пути. Другие origins по-прежнему получают 403.
+
+При `REMOVI_TRUST_PROXY=1` задайте также `REMOVI_TRUSTED_PROXY_IPS` со списком точных IP непосредственных прокси, например `172.19.0.2,127.0.0.1`. CIDR и имена хостов не допускаются. Не входящий в список сосед не может задать клиентский IP через заголовки. Если список не задан, сохраняется прежнее поведение доверия частному соединению. Закрепите адреса контейнеров и проверьте отсутствие общей NAT-границы с недоверенными отправителями: IP определяет сетевого соседа, а не отдельный процесс.
+
+Чтобы сборщику не требовался Docker socket, создайте закрытый каталог и задайте приложению `REMOVI_SWATTER_LOG_DIR=/events`. В этом режиме JSONL событий пишется в `events.jsonl` вместо stdout. Очередь ограничена 256 событиями, ротация сохраняет текущий файл и два предыдущих, до 10 MiB каждый. Каталог должен принадлежать одному процессу приложения; файлы создаются с правами 0640. Сборщику монтируйте только этот каталог на чтение, а его SQLite-хранилище — отдельно на запись. Ошибка записи выводится в stderr один раз; недоступность диска не останавливает сайт, поэтому отслеживайте состояние журнала.
+
+В Swatter используйте источник `type: file`, `parser: security_json`, точный путь к `events.jsonl` и `options: {"ip_source":"client_ip","trust_client_ip":true,"trusted_proxy_cidrs":["172.19.0.2/32"]}` с фактическими адресами прокси. Для наблюдения оставьте `mode: observe`, `firewall.enabled: false`, `nft_eligible: false`, `trusted_success: false`; для проверенной цепочки задайте `attribution: direct`. На каждом входе сопоставьте собственный внешний адрес с событием и БД, повторив запрос с поддельными `X-Forwarded-For` и `X-Real-IP`. Одного включения переменных недостаточно: PROXY protocol и перезапись заголовка последним прокси должны быть настроены до приложения.
+
 ## Dependency maintenance
 
 The app uses Node.js 24.22.1 LTS and the proxy uses nginx 1.30.6 on Alpine 3.24, pinned by digest. There are no npm dependencies. Review Node/nginx advisories and run `npm test` before updating the image pins; rebuild the app (`docker compose build --pull`) as well as pulling nginx for a future rollout. Existing containers are unchanged until recreated.

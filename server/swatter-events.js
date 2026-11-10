@@ -3,6 +3,7 @@
 const { write } = require('node:fs');
 const net = require('node:net');
 const { performance } = require('node:perf_hooks');
+const { createFileWriter } = require('./swatter-log');
 
 const ENDPOINT = '/api/_events';
 const MAX_BODY_BYTES = 256;
@@ -40,20 +41,26 @@ function publicPeer(ip) {
   return !reserved.check(ip, family) && (family === 'ipv4' || globalV6.check(ip, family));
 }
 
-function createEmitter() {
+function createEmitter(logDirectory) {
   try {
     // Initializing Node stdio makes a piped descriptor nonblocking.
     void process.stdout;
   } catch { /* The descriptor write reports an unavailable sink. */ }
   // Lines wait in a bounded queue so a busy pipe delays events instead of dropping them.
   const queue = [];
+  const writeLine = logDirectory ? createFileWriter(logDirectory) : (line, callback) => write(1, line, callback);
   let writing = false;
+  let warned = false;
   function flush() {
     if (!queue.length) { writing = false; return; }
     writing = true;
     try {
-      write(1, queue[0], error => {
+      writeLine(queue[0], error => {
         if (error?.code === 'EAGAIN') { setTimeout(flush, 50).unref(); return; }
+        if (error && !warned) {
+          warned = true;
+          console.error(`Swatter event write failed: ${error.code || 'invalid log target'}`);
+        }
         queue.shift();
         flush();
       });
@@ -75,11 +82,18 @@ function proxiedClient(request, peer) {
   return values ? normalizeIp(values.join(',').split(',').at(-1).trim()) : null;
 }
 
-function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } = {}) {
-  const origin = new URL(allowedOrigin);
-  if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== allowedOrigin ||
+function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false, trustedProxyIps, logDirectory } = {}) {
+  const allowedOrigins = Array.isArray(allowedOrigin) ? allowedOrigin : [allowedOrigin];
+  if (allowedOrigins.length < 1 || allowedOrigins.length > 16 || new Set(allowedOrigins).size !== allowedOrigins.length ||
       !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(instance)) throw new TypeError('Invalid Swatter configuration');
-  const emit = createEmitter();
+  for (const value of allowedOrigins) {
+    const origin = new URL(value);
+    if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== value) throw new TypeError('Invalid Swatter origin');
+  }
+  const permittedPeers = trustedProxyIps === undefined ? null : new Set(trustedProxyIps.map(normalizeIp));
+  if (permittedPeers && (trustedProxyIps.length < 1 || trustedProxyIps.length > 16 ||
+      permittedPeers.has(null) || permittedPeers.size !== trustedProxyIps.length)) throw new TypeError('Invalid Swatter proxy IPs');
+  const emit = createEmitter(logDirectory);
   const peers = new Map();
   let pending = 0;
 
@@ -105,13 +119,13 @@ function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } 
       request.resume();
     }
     const peer = normalizeIp(request.socket.remoteAddress);
-    const proxied = trustProxy && peer ? proxiedClient(request, peer) : null;
+    const proxied = trustProxy && peer && (!permittedPeers || permittedPeers.has(peer)) ? proxiedClient(request, peer) : null;
     const client = proxied || peer;
     if (!client) { reject(429); return true; }
     if (request.url !== ENDPOINT) { reject(400); return true; }
     if (request.method !== 'POST') { reject(405); return true; }
     const origins = request.headersDistinct.origin;
-    if (origins?.length !== 1 || origins[0] !== origin.origin) { reject(403); return true; }
+    if (origins?.length !== 1 || !allowedOrigins.includes(origins[0])) { reject(403); return true; }
     if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers['content-type'] || '') || request.headers['content-encoding']) {
       reject(415); return true;
     }

@@ -286,11 +286,15 @@ function loadSwatter() {
       fs.readFileSync(path.join(ROOT, 'scripts/client-api.js')),
       fs.readFileSync(path.join(ROOT, 'server/swatter-browser.js'))
     ]);
-    const handle = createTelemetryHandler(process.env.REMOVI_PUBLIC_ORIGIN, process.env.REMOVI_INSTANCE_ID || 'videohub',
-      { trustProxy: process.env.REMOVI_TRUST_PROXY === '1' });
+    const origins = process.env.REMOVI_PUBLIC_ORIGINS !== undefined ? process.env.REMOVI_PUBLIC_ORIGINS.split(',').map(value => value.trim()) : process.env.REMOVI_PUBLIC_ORIGIN;
+    const handle = createTelemetryHandler(origins, process.env.REMOVI_INSTANCE_ID || 'videohub', {
+      trustProxy: process.env.REMOVI_TRUST_PROXY === '1',
+      trustedProxyIps: process.env.REMOVI_TRUSTED_PROXY_IPS !== undefined ? process.env.REMOVI_TRUSTED_PROXY_IPS.split(',').map(value => value.trim()) : undefined,
+      logDirectory: process.env.REMOVI_SWATTER_LOG_DIR || undefined
+    });
     return { clientScript, handle };
   } catch (error) {
-    console.error(`Swatter events disabled: ${error.message}. Check REMOVI_PUBLIC_ORIGIN and REMOVI_INSTANCE_ID.`);
+    console.error(`Swatter events disabled: ${error.message}. Check REMOVI_PUBLIC_ORIGIN(S), REMOVI_INSTANCE_ID, REMOVI_TRUSTED_PROXY_IPS and REMOVI_SWATTER_LOG_DIR.`);
     return null;
   }
 }
