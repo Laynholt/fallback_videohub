@@ -105,7 +105,7 @@ function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } 
     const peer = normalizeIp(request.socket.remoteAddress);
     const proxied = trustProxy && peer ? proxiedClient(request, peer) : null;
     const client = proxied || peer;
-    if (!client || !admit(client)) { reject(429); return true; }
+    if (!client) { reject(429); return true; }
     if (request.url !== ENDPOINT) { reject(400); return true; }
     if (request.method !== 'POST') { reject(405); return true; }
     const origins = request.headersDistinct.origin;
@@ -116,6 +116,7 @@ function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } 
     const length = request.headers['content-length'];
     if (length && (!/^\d+$/.test(length) || Number(length) > MAX_BODY_BYTES)) { reject(413); return true; }
     if (pending >= 32) { reject(503); return true; }
+    if (!admit(client)) { reject(429); return true; }
     pending++;
     let done = false;
     let size = 0;
