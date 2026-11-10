@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
+const { ENDPOINT: SWATTER_ENDPOINT, createTelemetryHandler } = require('./server/swatter-events');
 
 const {
   getCatalogPage,
@@ -273,7 +274,22 @@ function handleApi(requestUrl, response) {
   return false;
 }
 
+function loadSwatter() {
+  if (process.env.REMOVI_SWATTER_EVENTS !== '1' || XHTTP_PATH === SWATTER_ENDPOINT) return null;
+  try {
+    const clientScript = Buffer.concat([
+      fs.readFileSync(path.join(ROOT, 'scripts/client-api.js')),
+      fs.readFileSync(path.join(ROOT, 'server/swatter-browser.js'))
+    ]);
+    const handle = createTelemetryHandler(process.env.REMOVI_PUBLIC_ORIGIN, process.env.REMOVI_INSTANCE_ID || 'videohub');
+    return { clientScript, handle };
+  } catch {
+    return null;
+  }
+}
+
 function createServer() {
+  const swatter = loadSwatter();
   return http.createServer((request, response) => {
     try {
       const requestUrl = new URL(request.url, 'http://localhost');
@@ -281,6 +297,13 @@ function createServer() {
 
       if (XHTTP_PATH && pathname === XHTTP_PATH) {
         sendPrettyError(response, 403, 'Доступ запрещён', 'Этот адрес недоступен для прямого просмотра.');
+        return;
+      }
+
+      if (swatter?.handle(request, response)) return;
+      if (swatter && pathname === '/scripts/client-api.js') {
+        response.writeHead(200, withSecurityHeaders({ 'Content-Type': MIME_TYPES['.js'], 'Cache-Control': 'no-store' }));
+        response.end(swatter.clientScript);
         return;
       }
 
