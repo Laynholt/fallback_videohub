@@ -67,10 +67,12 @@ function createEmitter() {
 }
 
 // Only a private-network proxy may name the client; its own address stays in peer_ip.
+// The rightmost X-Forwarded-For entry is the one the proxy wrote itself: nginx appends it
+// and Caddy replaces untrusted values, while X-Real-IP passes through Caddy unchanged.
 function proxiedClient(request, peer) {
   if (publicPeer(peer)) return null;
-  const values = request.headersDistinct['x-real-ip'];
-  return values?.length === 1 ? normalizeIp(values[0].trim()) : null;
+  const values = request.headersDistinct['x-forwarded-for'];
+  return values ? normalizeIp(values.join(',').split(',').at(-1).trim()) : null;
 }
 
 function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } = {}) {
