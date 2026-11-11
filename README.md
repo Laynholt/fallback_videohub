@@ -47,7 +47,7 @@ docker compose up -d --build
 
 ## Переменные окружения
 
-Пример лежит в [.env.example](/f:/Data/Code/JavaScript/Fallback/.env.example).
+Пример лежит в [.env.example](.env.example).
 
 | Переменная | Что делает |
 | --- | --- |
@@ -216,15 +216,15 @@ docker compose up -d --build
 
 ## Структура проекта
 
-- [docker-compose.yml](/f:/Data/Code/JavaScript/Fallback/docker-compose.yml) — поднимает контейнеры `app` и `nginx`.
-- [Dockerfile](/f:/Data/Code/JavaScript/Fallback/Dockerfile) — образ Node.js-приложения.
-- [nginx.conf](/f:/Data/Code/JavaScript/Fallback/nginx.conf) — reverse proxy и TLS-конфиг.
-- [server.js](/f:/Data/Code/JavaScript/Fallback/server.js) — HTTP-сервер, маршруты и API.
-- [server/catalog-service.js](/f:/Data/Code/JavaScript/Fallback/server/catalog-service.js) — подготовка данных каталога, релизов и авторов.
-- [index.html](/f:/Data/Code/JavaScript/Fallback/index.html) — главная страница каталога.
-- [player.html](/f:/Data/Code/JavaScript/Fallback/player.html) — страница релиза.
-- [channel.html](/f:/Data/Code/JavaScript/Fallback/channel.html) — страница автора.
-- [screenshots](/f:/Data/Code/JavaScript/Fallback/screenshots) — изображения для README.
+- [docker-compose.yml](docker-compose.yml) — поднимает контейнеры `app` и `nginx`.
+- [Dockerfile](Dockerfile) — образ Node.js-приложения.
+- [nginx.conf](nginx.conf) — reverse proxy и TLS-конфиг.
+- [server.js](server.js) — HTTP-сервер, маршруты и API.
+- [server/catalog-service.js](server/catalog-service.js) — подготовка данных каталога, релизов и авторов.
+- [index.html](index.html) — главная страница каталога.
+- [player.html](player.html) — страница релиза.
+- [channel.html](channel.html) — страница автора.
+- [screenshots](screenshots) — изображения для README.
 
 ## Диагностика
 
