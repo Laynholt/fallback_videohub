@@ -124,6 +124,67 @@ docker logs removi_app | jq -Rrc 'fromjson? | select(.schema == "moskit.security
 
 Передавайте сообщения JSONL после снятия конверта драйвера Docker. Профиль предназначен для наблюдения.
 
+## Необязательный web audit
+
+`REMOVI_SWATTER_WEB_AUDIT=1` включает отдельный `moskit.http.v1` event после завершения
+каждого ответа Node. По умолчанию выключен; `REMOVI_SWATTER_EVENTS` независимо управляет
+формами и browser listener. Используются те же обязательные точные origins, instance,
+доверенные proxy IP и `REMOVI_SWATTER_LOG_DIR`. Неверная общая конфигурация отключает
+оба producer. Origin для поля `host` берётся из первого настроенного origin, а не из
+пользовательского Host. Web audit не ограничивает методы маршрутов: например, POST к
+read-only API сохраняет прежний ответ. Origin-проверка защищает endpoint форм; обычные
+посещения сайта не требуют заголовка Origin.
+
+В событии сохраняются итоговый status, безопасный method, peer/client IP, `ip_source`,
+фиксированный `uri`, `route_class`, `path_hash` и `gate_denied: false`. Реальные API
+`/api/catalog`, `/api/video`, `/api/channel`, `/api/_events` относятся к `api_known`;
+404 отсутствующего видео не является неизвестным API. Неизвестные API имеют alias
+`/api/_unknown`, другие неизвестные пути — `/_unknown`. SHA-256 исходного пути без query
+различает неизвестные пути. До хеширования настроенный XHTTP-путь с подпутями заменяется
+на `/_private`, идентификаторы видео/автора — на фиксированные aliases. Имена preview
+файлов также заменяются. Query, body, cookies, auth headers, Host и поля форм не пишутся.
+Отказ XHTTP 403 не является отказом panel gate.
+
+Событие формы остаётся отдельным действием: успешный submit при включённых обоих
+producer даёт один `moskit.security.v1` и один `moskit.http.v1` с HTTP 204.
+Web audit имеет отдельный общий бюджет 3000 событий в минуту на процесс и использует
+существующую очередь 256 событий и ротацию 3 × 10 MiB. При превышении бюджета/очереди,
+недоступности sink и незавершённом соединении событие может отсутствовать; HTTP не
+блокируется. Квота форм при этом не расходуется web audit.
+
+Для HTTP задайте отдельный source с `parser: nginx_json`, `mode: observe`,
+`nft_eligible: false`, `trusted_success: false`, `options.log_visits: true`,
+`options.api_prefixes: ["/api"]` и
+`options.legitimate_api_prefixes: ["/api/catalog","/api/video","/api/channel","/api/_events"]`.
+Настройки доверия `client_ip` должны совпадать с проверенной цепочкой proxy выше.
+В общем файле другой source `security_json` читает только события форм.
+Базовый parser совместим с фиксированными URI; использование `path_hash` для подсчёта
+разных неизвестных путей требует квалифицированного metadata adapter Swatter.
+
+### Приёмка ingress и browser
+
+Source-тесты (`node --test test/swatter-events.test.js test/swatter-log.test.js`)
+проверяют Node и served listener, но не заменяют browser/image и production-приёмку.
+Перед включением collector проверьте каждый фактический вход:
+
+1. Caddy с `removiCover=true` напрямую в `removi_app:8085`: загрузить каталог и видео,
+   отправить все четыре формы в настоящем браузере; сопоставить четыре form events без
+   значений полей и по одному web event с итоговым status для каждого запроса Node.
+2. Backup nginx → Node: повторить те же действия на его точном HTTPS origin. Проверить
+   оба origins и поддельные XFF/X-Real-IP с двух контролируемых публичных адресов.
+   Сверить peer/client с реальным packet path; до подтверждения оставить observe.
+3. В Mosquito `deploy/removi/nginx.our-vpn.conf` перехватывает `/hosting-test/ping`,
+   `/hosting-test/*` и `/api/v1/video/stream` до Node. Их события относятся к фактическому
+   ingress/backend source. Отсутствие Node event ожидаемо; Node 404 при прямом обращении
+   не доказывает отказ overlay. При классификации ingress stream — известный API.
+4. Caddy с `removiCover=false` обслуживает static-only сайт без Node receiver.
+   `/api/_events` там недоступен и form/web events этого приложения не возникают.
+   Для них требуется явное подключение Node receiver и согласованный routing; эта
+   настройка сама по себе его не создаёт. Сохранить static-only поведение при проверке.
+
+Откат web audit: `REMOVI_SWATTER_WEB_AUDIT=0` и пересоздать приложение поддерживаемым
+pipeline. Отдельный флаг форм, origins, trusted peers и routing менять не требуется.
+
 ## Полезные команды
 
 ```bash

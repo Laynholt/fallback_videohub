@@ -275,7 +275,9 @@ function handleApi(requestUrl, response) {
 }
 
 function loadSwatter() {
-  if (process.env.REMOVI_SWATTER_EVENTS !== '1') return null;
+  const forms = process.env.REMOVI_SWATTER_EVENTS === '1';
+  const webAudit = process.env.REMOVI_SWATTER_WEB_AUDIT === '1';
+  if (!forms && !webAudit) return null;
   // Warnings go to stderr so the stdout event stream stays pure JSONL.
   if (XHTTP_PATH === SWATTER_ENDPOINT) {
     console.error(`Swatter events disabled: XHTTP_PATH collides with ${SWATTER_ENDPOINT}`);
@@ -292,16 +294,38 @@ function loadSwatter() {
       trustedProxyIps: process.env.REMOVI_TRUSTED_PROXY_IPS !== undefined ? process.env.REMOVI_TRUSTED_PROXY_IPS.split(',').map(value => value.trim()) : undefined,
       logDirectory: process.env.REMOVI_SWATTER_LOG_DIR || undefined
     });
-    return { clientScript, handle };
+    return { clientScript, handle, forms, webAudit };
   } catch (error) {
     console.error(`Swatter events disabled: ${error.message}. Check REMOVI_PUBLIC_ORIGIN(S), REMOVI_INSTANCE_ID, REMOVI_TRUSTED_PROXY_IPS and REMOVI_SWATTER_LOG_DIR.`);
     return null;
   }
 }
 
+function auditRoute(rawUrl) {
+  // Use the original query-free path for unknowns; redact known private/dynamic parts first.
+  const original = typeof rawUrl === 'string' ? rawUrl.split('?', 1)[0] : '';
+  let pathname;
+  try { pathname = new URL(rawUrl, 'http://localhost').pathname; }
+  catch { return { uri: '/_unknown', route_class: 'other', hashPath: original }; }
+  let uri = '/_unknown';
+  let routeClass = 'other';
+  if (XHTTP_PATH && (pathname === XHTTP_PATH || pathname.startsWith(XHTTP_PATH + '/'))) uri = '/_private';
+  else if (['/api/catalog', '/api/video', '/api/channel', SWATTER_ENDPOINT].includes(pathname)) {
+    uri = pathname; routeClass = 'api_known';
+  } else if (pathname.startsWith('/api/')) { uri = '/api/_unknown'; routeClass = 'api_unknown'; }
+  else if (['/', '/index.html', '/player.html', '/channel.html'].includes(pathname)) { uri = pathname; routeClass = 'page'; }
+  else if (pathname.startsWith('/video/')) { uri = '/video/_id'; routeClass = 'page'; }
+  else if (pathname.startsWith('/channel/')) { uri = '/channel/_author'; routeClass = 'page'; }
+  else if (PUBLIC_SCRIPT_PATHS.has(pathname)) { uri = pathname; routeClass = 'asset'; }
+  else if (isPublicPreviewPath(pathname)) { uri = '/assets/previews/_asset'; routeClass = 'asset'; }
+  return { uri, route_class: routeClass,
+    hashPath: uri === '/_unknown' || uri === '/api/_unknown' ? original : uri };
+}
+
 function createServer() {
   const swatter = loadSwatter();
   return http.createServer((request, response) => {
+    if (swatter?.webAudit) swatter.handle.audit(request, response, () => auditRoute(request.url));
     try {
       const requestUrl = new URL(request.url, 'http://localhost');
       const pathname = requestUrl.pathname;
@@ -311,8 +335,8 @@ function createServer() {
         return;
       }
 
-      if (swatter?.handle(request, response)) return;
-      if (swatter && pathname === '/scripts/client-api.js') {
+      if (swatter?.forms && swatter.handle(request, response)) return;
+      if (swatter?.forms && pathname === '/scripts/client-api.js') {
         response.writeHead(200, withSecurityHeaders({ 'Content-Type': MIME_TYPES['.js'], 'Cache-Control': 'no-store' }));
         response.end(swatter.clientScript);
         return;

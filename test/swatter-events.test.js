@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
-const { readFileSync, mkdirSync, mkdtempSync, rmSync, existsSync } = require('node:fs');
+const { readFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, unlinkSync } = require('node:fs');
 const path = require('node:path');
 const { createInterface } = require('node:readline');
 const test = require('node:test');
@@ -15,7 +15,7 @@ async function start(t, env) {
   const child = spawn(process.execPath, ['-e', `
     const server = require('./server.js').createServer();
     server.listen(0, '127.0.0.1', () => console.log(server.address().port));
-  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_TRUST_PROXY: '0', REMOVI_TRUSTED_PROXY_IPS: undefined, REMOVI_PUBLIC_ORIGINS: undefined, REMOVI_SWATTER_LOG_DIR: '', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
+  `], { cwd: root, env: { ...process.env, XHTTP_PATH: '', REMOVI_SWATTER_WEB_AUDIT: '0', REMOVI_TRUST_PROXY: '0', REMOVI_TRUSTED_PROXY_IPS: undefined, REMOVI_PUBLIC_ORIGINS: undefined, REMOVI_SWATTER_LOG_DIR: '', REMOVI_INSTANCE_ID: 'fixture', REMOVI_PUBLIC_ORIGIN: origin, ...env },
     stdio: ['ignore', 'pipe', 'pipe'] });
   const closed = once(child, 'close');
   t.after(async () => {
@@ -49,11 +49,141 @@ async function waitFor(condition) {
   for (let attempt = 0; attempt < 200 && !condition(); attempt++) await delay(10);
 }
 
+test('web audit records one final response with safe route metadata and preserves methods', async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', XHTTP_PATH: '/private-fixture' });
+  const cases = [
+    ['/api/catalog?q=QUERY_SECRET', 'GET', 200, '/api/catalog', 'api_known'],
+    ['/api/video?id=ID_SECRET', 'GET', 404, '/api/video', 'api_known'],
+    ['/api/channel', 'POST', 200, '/api/channel', 'api_known'],
+    ['/api/catalog', 'HEAD', 200, '/api/catalog', 'api_known'],
+    ['/api/channel', 'PROPFIND', 200, '/api/channel', 'api_known'],
+    ['/api/UNKNOWN_SECRET?token=QUERY_SECRET', 'GET', 404, '/api/_unknown', 'api_unknown'],
+    ['/scripts/client-api.js', 'GET', 200, '/scripts/client-api.js', 'asset'],
+    ['/assets/previews/audio-000.svg', 'GET', 200, '/assets/previews/_asset', 'asset'],
+    ['/assets/previews/MISSING_SECRET.svg', 'GET', 404, '/assets/previews/_asset', 'asset'],
+    ['/video/ID_SECRET', 'GET', 200, '/video/_id', 'page'],
+    ['/channel/AUTHOR_SECRET', 'GET', 200, '/channel/_author', 'page'],
+    ['/index.html', 'GET', 302, '/index.html', 'page'],
+    ['/UNKNOWN_SECRET', 'GET', 404, '/_unknown', 'other'],
+    ['/private-fixture', 'GET', 403, '/_private', 'other']
+  ];
+  for (const [index, [url, method, status, uri, routeClass]] of cases.entries()) {
+    const response = await fetch(base + url, { method, body: method === 'POST' ? 'BODY_SECRET' : undefined, redirect: 'manual', headers: { Host: 'HOST_SECRET', Authorization: 'AUTH_SECRET', Cookie: 'COOKIE_SECRET', 'X-Forwarded-For': '8.8.8.8' } });
+    await response.arrayBuffer();
+    assert.equal(response.status, status);
+    await waitFor(() => events.length > index);
+    assert.equal(events.length, index + 1);
+    const event = events.at(-1);
+    assert.equal(event.schema, 'moskit.http.v1');
+    assert.equal(event.status, status);
+    assert.equal(event.method, method === 'PROPFIND' ? 'OTHER' : method);
+    assert.equal(event.uri, uri);
+    assert.equal(event.route_class, routeClass);
+    assert.match(event.path_hash, /^[a-f0-9]{64}$/);
+    assert.equal(event.host, 'cover.fixture.test');
+    assert.equal(event.client_ip, null);
+    assert.equal(event.gate_denied, false);
+  }
+  assert.equal(events.length, cases.length);
+  assert.doesNotMatch(JSON.stringify(events), /QUERY_SECRET|ID_SECRET|AUTHOR_SECRET|UNKNOWN_SECRET|HOST_SECRET|AUTH_SECRET|COOKIE_SECRET|BODY_SECRET|MISSING_SECRET|private-fixture/);
+  // Enabling web audit alone must not inject the form listener or enable its endpoint.
+  assert.equal(await (await fetch(base + '/scripts/client-api.js')).text(), readFileSync(path.join(root, 'scripts/client-api.js'), 'utf8'));
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 404);
+});
+
+test('web digests preserve unknown-path distinctions while redacting dynamic and private routes before hashing', async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', XHTTP_PATH: '/hidden-fixture' });
+  const paths = ['/probe-a?secret=one', '/probe-a?secret=two', '/probe-b', '/video/one', '/video/two', '/hidden-fixture', '/hidden-fixture/SECRET'];
+  for (const pathname of paths) await (await fetch(base + pathname)).arrayBuffer();
+  await waitFor(() => events.length === paths.length);
+  assert.equal(events.length, paths.length);
+  assert.equal(events[0].path_hash, events[1].path_hash);
+  assert.notEqual(events[0].path_hash, events[2].path_hash);
+  assert.equal(events[3].path_hash, events[4].path_hash);
+  const { createHash } = require('node:crypto');
+  assert.equal(events[5].path_hash, createHash('sha256').update('/_private').digest('hex'));
+  assert.equal(events[5].path_hash, events[6].path_hash);
+});
+
+test('web audit ignores spoofed attribution from a peer outside the exact allowlist', async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', REMOVI_TRUST_PROXY: '1', REMOVI_TRUSTED_PROXY_IPS: '10.0.0.2' });
+  await (await fetch(base + '/', { headers: { 'X-Forwarded-For': '8.8.8.8', 'X-Real-IP': '1.1.1.1' } })).arrayBuffer();
+  await waitFor(() => events.length === 1);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].client_ip, null);
+  assert.equal(events[0].ip_source, 'unattributed');
+});
+
+test('web audit writer failure does not change HTTP responses or expose request data', async t => {
+  const scratch = path.join(root, '.tmp');
+  mkdirSync(scratch, { recursive: true });
+  const directory = mkdtempSync(path.join(scratch, 'swatter-web-fault-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const fixture = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', REMOVI_SWATTER_LOG_DIR: directory });
+  const log = path.join(directory, 'events.jsonl');
+  unlinkSync(log);
+  mkdirSync(log);
+  for (let i = 0; i < 2; i++) {
+    assert.equal((await fetch(fixture.base + '/api/catalog?secret=NEVER_LOG')).status, 200);
+  }
+  await waitFor(() => fixture.stderr().includes('Swatter event write failed'));
+  assert.equal(fixture.stderr().match(/Swatter event write failed/g)?.length, 1);
+  assert.doesNotMatch(fixture.stderr(), /NEVER_LOG/);
+  assert.deepEqual(fixture.events, []);
+});
+
+test('web audit keeps form actions separate and shares exact-peer attribution without changing origin checks', async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_SWATTER_WEB_AUDIT: '1', REMOVI_TRUST_PROXY: '1', REMOVI_TRUSTED_PROXY_IPS: '127.0.0.1' });
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' }, origin + ':8443')).status, 403);
+  await waitFor(() => events.length === 3);
+  assert.equal(events.length, 3);
+  assert.equal(events.filter(event => event.schema === 'moskit.security.v1').length, 1);
+  const web = events.filter(event => event.schema === 'moskit.http.v1');
+  assert.deepEqual(web.map(event => event.status), [204, 403]);
+  for (const event of events) {
+    assert.equal(event.client_ip, '1.1.1.1');
+    assert.equal(event.peer_ip, '127.0.0.1');
+    assert.equal(event.ip_source, 'trusted_proxy');
+  }
+});
+
+test('web audit budget bounds visits without spending the form quota', { timeout: 20_000 }, async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_SWATTER_WEB_AUDIT: '1' });
+  for (let i = 0; i < 3001; i++) {
+    const response = await fetch(base + '/api/missing');
+    assert.equal(response.status, 404);
+    await response.arrayBuffer();
+  }
+  assert.equal((await submit(base, { event: 'login_submit', page: 'catalog' })).status, 204);
+  await waitFor(() => events.some(event => event.schema === 'moskit.security.v1'));
+  assert.equal(events.filter(event => event.schema === 'moskit.http.v1').length, 3000);
+  assert.equal(events.filter(event => event.schema === 'moskit.security.v1').length, 1);
+});
+
+test('web audit records the final 500 when URL parsing fails', async t => {
+  const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1' });
+  const status = await new Promise((resolve, reject) => {
+    const request = require('node:http').request(base, { path: 'http://[', method: 'GET' }, response => {
+      response.resume();
+      response.on('end', () => resolve(response.statusCode));
+    });
+    request.on('error', reject);
+    request.end();
+  });
+  assert.equal(status, 500);
+  await waitFor(() => events.length === 1);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].status, 500);
+  assert.equal(events[0].uri, '/_unknown');
+});
+
 test('Swatter keeps the original script and endpoint behavior when disabled, invalid, or on an XHTTP collision', { timeout: 10_000 }, async t => {
   const untouched = readFileSync(path.join(root, 'scripts/client-api.js'), 'utf8');
   const scenarios = [
     [{ REMOVI_SWATTER_EVENTS: '0' }, 404, null],
     [{ REMOVI_SWATTER_EVENTS: '1', REMOVI_PUBLIC_ORIGIN: 'https://cover.fixture.test/path' }, 404, /REMOVI_PUBLIC_ORIGIN/],
+    [{ REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', REMOVI_PUBLIC_ORIGIN: 'https://cover.fixture.test/path' }, 404, /REMOVI_PUBLIC_ORIGIN/],
     [{ REMOVI_SWATTER_EVENTS: '1', XHTTP_PATH: '/api/_events' }, 403, /XHTTP_PATH collides/]
   ];
   for (const [env, status, warning] of scenarios) {
@@ -190,7 +320,7 @@ test('Swatter trusts the proxy-written X-Forwarded-For entry only from a private
 });
 
 test('Swatter keeps responding after stdout disconnects', { skip: process.platform === 'win32', timeout: 10_000 }, async t => {
-  const fixture = await start(t, { REMOVI_SWATTER_EVENTS: '1' });
+  const fixture = await start(t, { REMOVI_SWATTER_EVENTS: '1', REMOVI_SWATTER_WEB_AUDIT: '1' });
   await fixture.closeOutput();
   assert.equal((await submit(fixture.base, { event: 'login_submit', page: 'catalog' })).status, 204);
   assert.equal((await fetch(fixture.base + '/api/catalog')).status, 200);
