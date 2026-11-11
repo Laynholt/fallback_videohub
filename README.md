@@ -140,8 +140,10 @@ read-only API сохраняет прежний ответ. Origin-провер�
 `/api/catalog`, `/api/video`, `/api/channel`, `/api/_events` относятся к `api_known`;
 404 отсутствующего видео не является неизвестным API. Неизвестные API имеют alias
 `/api/_unknown`, другие неизвестные пути — `/_unknown`. SHA-256 исходного пути без query
-различает неизвестные пути. До хеширования настроенный XHTTP-путь с подпутями заменяется
-на `/_private`, идентификаторы видео/автора — на фиксированные aliases. Имена preview
+различает неизвестные пути. Из absolute-form request target сначала удаляется authority,
+включая userinfo; query и fragment также исключаются. До URL-нормализации и хеширования
+настроенный XHTTP-путь с подпутями заменяется на `/_private`, идентификаторы видео/автора —
+на фиксированные aliases. Завершающие `/` у private prefix учитываются. Имена preview
 файлов также заменяются. Query, body, cookies, auth headers, Host и поля форм не пишутся.
 Отказ XHTTP 403 не является отказом panel gate.
 

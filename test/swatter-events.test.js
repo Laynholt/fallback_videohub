@@ -105,6 +105,45 @@ test('web digests preserve unknown-path distinctions while redacting dynamic and
   assert.equal(events[5].path_hash, events[6].path_hash);
 });
 
+test('raw request targets redact private and dynamic prefixes before dot normalization and exclude authority', async t => {
+  const { createHash } = require('node:crypto');
+  const digest = value => createHash('sha256').update(value).digest('hex');
+  const rawRequest = (base, target) => new Promise((resolve, reject) => {
+    const request = require('node:http').request(base, { path: target }, response => {
+      response.resume();
+      response.on('end', () => resolve(response.statusCode));
+    });
+    request.on('error', reject);
+    request.end();
+  });
+  for (const privatePath of ['/private-fixture', '/private-fixture/']) {
+    await t.test(privatePath.endsWith('/') ? 'trailing slash prefix' : 'plain prefix', async child => {
+      const { base, events } = await start(child, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', XHTTP_PATH: privatePath });
+      const cases = [
+        ['/private-fixture/%2e%2e/outside', '/_private'],
+        ['/private-fixture/../outside', '/_private'],
+        ['/private-fixture/child', '/_private'],
+        ['/%70rivate-fixture/../outside', '/_private'],
+        ['/private-fixture\\..\\outside', '/_private'],
+        ['/video/dynamic-fixture/../../outside', '/video/_id'],
+        ['/video%2fdynamic-fixture/../../outside', '/video/_id'],
+        ['/channel/dynamic-fixture/%2e%2e/%2e%2e/outside', '/channel/_author'],
+        ['http://user-fixture:password-fixture@host.fixture/probe?token=fixture', '/probe'],
+        ['http://different-user:different-password@different.fixture/probe', '/probe'],
+        ['http://user-fixture:password-fixture@host.fixture/private-fixture/../outside', '/_private'],
+        ['http://user-fixture:password-fixture@host.fixture', '/', 200]
+      ];
+      for (const [index, [target, safePath, status = 404]] of cases.entries()) {
+        assert.equal(await rawRequest(base, target), status);
+        await waitFor(() => events.length > index);
+        assert.equal(events.length, index + 1);
+        assert.equal(events[index].path_hash, digest(safePath));
+      }
+      assert.doesNotMatch(JSON.stringify(events), /private-fixture|dynamic-fixture|user-fixture|password-fixture|different-user|host\.fixture/);
+    });
+  }
+});
+
 test('web audit ignores spoofed attribution from a peer outside the exact allowlist', async t => {
   const { base, events } = await start(t, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', REMOVI_TRUST_PROXY: '1', REMOVI_TRUSTED_PROXY_IPS: '10.0.0.2' });
   await (await fetch(base + '/', { headers: { 'X-Forwarded-For': '8.8.8.8', 'X-Real-IP': '1.1.1.1' } })).arrayBuffer();

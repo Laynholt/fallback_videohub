@@ -302,14 +302,24 @@ function loadSwatter() {
 }
 
 function auditRoute(rawUrl) {
-  // Use the original query-free path for unknowns; redact known private/dynamic parts first.
-  const original = typeof rawUrl === 'string' ? rawUrl.split('?', 1)[0] : '';
+  // Extract only the path, then redact before URL normalization can erase a private prefix.
+  const target = typeof rawUrl === 'string' ? rawUrl.split(/[?#]/, 1)[0] : '';
+  const absolute = /^(?:[a-z][a-z0-9+.-]*:)?[\\/]{2}[^\\/]*([\\/].*)?$/i.exec(target);
+  let original = absolute ? (absolute[1] || '/') : target.startsWith('/') ? target : '/_invalid';
+  let decoded = original;
+  try { decoded = decodeURIComponent(original); } catch { /* Match the raw prefix on malformed escapes. */ }
+  const candidates = [original, decoded].map(value => value.replace(/\\/g, '/'));
+  const privatePrefix = XHTTP_PATH.replace(/\/+$/, '');
+  if (privatePrefix && candidates.some(value => value === privatePrefix || value.startsWith(privatePrefix + '/'))) original = '/_private';
+  else if (candidates.some(value => value.startsWith('/video/'))) original = '/video/_id';
+  else if (candidates.some(value => value.startsWith('/channel/'))) original = '/channel/_author';
+  else if (candidates.some(value => value.startsWith('/assets/previews/'))) original = '/assets/previews/_asset';
   let pathname;
   try { pathname = new URL(rawUrl, 'http://localhost').pathname; }
   catch { return { uri: '/_unknown', route_class: 'other', hashPath: original }; }
   let uri = '/_unknown';
   let routeClass = 'other';
-  if (XHTTP_PATH && (pathname === XHTTP_PATH || pathname.startsWith(XHTTP_PATH + '/'))) uri = '/_private';
+  if (original === '/_private') uri = '/_private';
   else if (['/api/catalog', '/api/video', '/api/channel', SWATTER_ENDPOINT].includes(pathname)) {
     uri = pathname; routeClass = 'api_known';
   } else if (pathname.startsWith('/api/')) { uri = '/api/_unknown'; routeClass = 'api_unknown'; }
