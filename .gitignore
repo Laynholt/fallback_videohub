@@ -30,3 +30,5 @@ sites/
 .codex-run/
 .superpowers/
 .playwright-mcp/
+.tmp/
+.worktree/

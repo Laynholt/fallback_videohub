@@ -138,6 +138,78 @@ docker logs removi_app | jq -Rrc 'fromjson? | select(.schema == "moskit.security
 
 Передавайте сообщения JSONL после снятия конверта драйвера Docker. Профиль предназначен для наблюдения.
 
+## Необязательный web audit
+
+`REMOVI_SWATTER_WEB_AUDIT=1` включает отдельный `moskit.http.v1` event после завершения
+каждого ответа Node. По умолчанию выключен; `REMOVI_SWATTER_EVENTS` независимо управляет
+формами и browser listener. Используются те же обязательные точные origins, instance,
+доверенные proxy IP и `REMOVI_SWATTER_LOG_DIR`. Неверная общая конфигурация отключает
+оба producer. Origin для поля `host` берётся из первого настроенного origin, а не из
+пользовательского Host. Web audit не ограничивает методы маршрутов: например, POST к
+read-only API сохраняет прежний ответ. Origin-проверка защищает endpoint форм; обычные
+посещения сайта не требуют заголовка Origin.
+
+В событии сохраняются итоговый status, безопасный method, peer/client IP, `ip_source`,
+фиксированный `uri`, `route_class`, `path_hash` и `gate_denied: false`. Реальные API
+`/api/catalog`, `/api/video`, `/api/channel`, `/api/_events` относятся к `api_known`;
+404 отсутствующего видео не является неизвестным API. Неизвестные API имеют alias
+`/api/_unknown`, другие неизвестные пути — `/_unknown`. SHA-256 исходного пути без query
+различает неизвестные пути. Из absolute-form request target сначала удаляется authority,
+включая userinfo; query и fragment также исключаются. До URL-нормализации и хеширования
+настроенный XHTTP-путь с подпутями заменяется на `/_private`, идентификаторы видео/автора —
+на фиксированные aliases. Завершающие `/` у private prefix учитываются. Имена preview
+файлов также заменяются. Query, body, cookies, auth headers, Host и поля форм не пишутся.
+Отказ XHTTP 403 не является отказом panel gate.
+
+Неоднозначные request targets имеют консервативный alias `/_ambiguous`,
+`route_class: other` и SHA-256 только этого фиксированного alias. Это malformed или
+относительная authority (`//…`), dot-сегменты, encoded dot/separator/backslash,
+вложенное percent-кодирование, malformed escapes, backslash и whitespace/control.
+Такие запросы не сохраняют различимость путей и API/page-классификацию. Обычные
+неизвестные пути сохраняют стабильные разные hashes; корректный absolute-form URL
+хешируется по path без authority. Ограничение относится только к audit: реальные
+маршруты, ответы и итоговый status остаются прежними.
+
+Событие формы остаётся отдельным действием: успешный submit при включённых обоих
+producer даёт один `moskit.security.v1` и один `moskit.http.v1` с HTTP 204.
+Web audit имеет отдельный общий бюджет 3000 событий в минуту на процесс и использует
+существующую очередь 256 событий и ротацию 3 × 10 MiB. При превышении бюджета/очереди,
+недоступности sink и незавершённом соединении событие может отсутствовать; HTTP не
+блокируется. Квота форм при этом не расходуется web audit.
+
+Для HTTP задайте отдельный source с `parser: nginx_json`, `mode: observe`,
+`nft_eligible: false`, `trusted_success: false`, `options.log_visits: true`,
+`options.api_prefixes: ["/api"]` и
+`options.legitimate_api_prefixes: ["/api/catalog","/api/video","/api/channel","/api/_events"]`.
+Настройки доверия `client_ip` должны совпадать с проверенной цепочкой proxy выше.
+В общем файле другой source `security_json` читает только события форм.
+Базовый parser совместим с фиксированными URI; использование `path_hash` для подсчёта
+разных неизвестных путей требует квалифицированного metadata adapter Swatter.
+
+### Приёмка ingress и browser
+
+Source-тесты (`node --test test/swatter-events.test.js test/swatter-log.test.js`)
+проверяют Node и served listener, но не заменяют browser/image и production-приёмку.
+Перед включением collector проверьте каждый фактический вход:
+
+1. Caddy с `removiCover=true` напрямую в `removi_app:8085`: загрузить каталог и видео,
+   отправить все четыре формы в настоящем браузере; сопоставить четыре form events без
+   значений полей и по одному web event с итоговым status для каждого запроса Node.
+2. Backup nginx → Node: повторить те же действия на его точном HTTPS origin. Проверить
+   оба origins и поддельные XFF/X-Real-IP с двух контролируемых публичных адресов.
+   Сверить peer/client с реальным packet path; до подтверждения оставить observe.
+3. В Mosquito `deploy/removi/nginx.our-vpn.conf` перехватывает `/hosting-test/ping`,
+   `/hosting-test/*` и `/api/v1/video/stream` до Node. Их события относятся к фактическому
+   ingress/backend source. Отсутствие Node event ожидаемо; Node 404 при прямом обращении
+   не доказывает отказ overlay. При классификации ingress stream — известный API.
+4. Caddy с `removiCover=false` обслуживает static-only сайт без Node receiver.
+   `/api/_events` там недоступен и form/web events этого приложения не возникают.
+   Для них требуется явное подключение Node receiver и согласованный routing; эта
+   настройка сама по себе его не создаёт. Сохранить static-only поведение при проверке.
+
+Откат web audit: `REMOVI_SWATTER_WEB_AUDIT=0` и пересоздать приложение поддерживаемым
+pipeline. Отдельный флаг форм, origins, trusted peers и routing менять не требуется.
+
 ## Полезные команды
 
 ```bash
@@ -187,6 +259,16 @@ docker compose logs -f
 3. Убедись, что пути к сертификатам в `.env` существуют на хосте и доступны контейнеру.
 
 4. Проверь, что `SITE_DOMAIN`, `NGINX_HTTP_PORT` и `NGINX_HTTPS_PORT` соответствуют твоей схеме доступа.
+
+### Несколько входов и изолированный сбор событий
+
+Для сайта на нескольких HTTPS-портах задайте `REMOVI_PUBLIC_ORIGINS=https://example.com,https://example.com:7443`. Этот явный список заменяет `REMOVI_PUBLIC_ORIGIN`; каждый элемент должен быть точным origin без пути. Другие origins по-прежнему получают 403.
+
+При `REMOVI_TRUST_PROXY=1` задайте также `REMOVI_TRUSTED_PROXY_IPS` со списком точных IP непосредственных прокси, например `172.19.0.2,127.0.0.1`. CIDR и имена хостов не допускаются. Не входящий в список сосед не может задать клиентский IP через заголовки. Если список не задан, сохраняется прежнее поведение доверия частному соединению. Закрепите адреса контейнеров и проверьте отсутствие общей NAT-границы с недоверенными отправителями: IP определяет сетевого соседа, а не отдельный процесс.
+
+Чтобы сборщику не требовался Docker socket, создайте закрытый каталог и задайте приложению `REMOVI_SWATTER_LOG_DIR=/events`. В этом режиме JSONL событий пишется в `events.jsonl` вместо stdout. Очередь ограничена 256 событиями, ротация сохраняет текущий файл и два предыдущих, до 10 MiB каждый. Каталог должен принадлежать одному процессу приложения; файлы создаются с правами 0640. Сборщику монтируйте только этот каталог на чтение, а его SQLite-хранилище — отдельно на запись. Ошибка записи выводится в stderr один раз; недоступность диска не останавливает сайт, поэтому отслеживайте состояние журнала.
+
+В Swatter используйте источник `type: file`, `parser: security_json`, точный путь к `events.jsonl` и `options: {"ip_source":"client_ip","trust_client_ip":true,"trusted_proxy_cidrs":["172.19.0.2/32"]}` с фактическими адресами прокси. Для наблюдения оставьте `mode: observe`, `firewall.enabled: false`, `nft_eligible: false`, `trusted_success: false`; для проверенной цепочки задайте `attribution: direct`. На каждом входе сопоставьте собственный внешний адрес с событием и БД, повторив запрос с поддельными `X-Forwarded-For` и `X-Real-IP`. Одного включения переменных недостаточно: PROXY protocol и перезапись заголовка последним прокси должны быть настроены до приложения.
 
 ## Dependency maintenance
 

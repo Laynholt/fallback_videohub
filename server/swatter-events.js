@@ -2,7 +2,9 @@
 
 const { write } = require('node:fs');
 const net = require('node:net');
+const { createHash } = require('node:crypto');
 const { performance } = require('node:perf_hooks');
+const { createFileWriter } = require('./swatter-log');
 
 const ENDPOINT = '/api/_events';
 const MAX_BODY_BYTES = 256;
@@ -40,20 +42,26 @@ function publicPeer(ip) {
   return !reserved.check(ip, family) && (family === 'ipv4' || globalV6.check(ip, family));
 }
 
-function createEmitter() {
+function createEmitter(logDirectory) {
   try {
     // Initializing Node stdio makes a piped descriptor nonblocking.
     void process.stdout;
   } catch { /* The descriptor write reports an unavailable sink. */ }
   // Lines wait in a bounded queue so a busy pipe delays events instead of dropping them.
   const queue = [];
+  const writeLine = logDirectory ? createFileWriter(logDirectory) : (line, callback) => write(1, line, callback);
   let writing = false;
+  let warned = false;
   function flush() {
     if (!queue.length) { writing = false; return; }
     writing = true;
     try {
-      write(1, queue[0], error => {
+      writeLine(queue[0], error => {
         if (error?.code === 'EAGAIN') { setTimeout(flush, 50).unref(); return; }
+        if (error && !warned) {
+          warned = true;
+          console.error(`Swatter event write failed: ${error.code || 'invalid log target'}`);
+        }
         queue.shift();
         flush();
       });
@@ -75,11 +83,30 @@ function proxiedClient(request, peer) {
   return values ? normalizeIp(values.join(',').split(',').at(-1).trim()) : null;
 }
 
-function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } = {}) {
-  const origin = new URL(allowedOrigin);
-  if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== allowedOrigin ||
+function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false, trustedProxyIps, logDirectory } = {}) {
+  const allowedOrigins = Array.isArray(allowedOrigin) ? allowedOrigin : [allowedOrigin];
+  if (allowedOrigins.length < 1 || allowedOrigins.length > 16 || new Set(allowedOrigins).size !== allowedOrigins.length ||
       !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(instance)) throw new TypeError('Invalid Swatter configuration');
-  const emit = createEmitter();
+  for (const value of allowedOrigins) {
+    const origin = new URL(value);
+    if (!['http:', 'https:'].includes(origin.protocol) || origin.origin !== value) throw new TypeError('Invalid Swatter origin');
+  }
+  const permittedPeers = trustedProxyIps === undefined ? null : new Set(trustedProxyIps.map(normalizeIp));
+  if (permittedPeers && (trustedProxyIps.length < 1 || trustedProxyIps.length > 16 ||
+      permittedPeers.has(null) || permittedPeers.size !== trustedProxyIps.length)) throw new TypeError('Invalid Swatter proxy IPs');
+  const emit = createEmitter(logDirectory);
+  function clientAddress(request) {
+    const peer = normalizeIp(request.socket.remoteAddress);
+    const proxied = trustProxy && peer && (!permittedPeers || permittedPeers.has(peer)) ? proxiedClient(request, peer) : null;
+    const client = proxied || peer;
+    return { peer, proxied, client };
+  }
+  function attribution(request) {
+    const { peer, proxied, client } = clientAddress(request);
+    const attributable = client && publicPeer(client);
+    return { peer_ip: peer, client_ip: attributable ? client : null,
+      ip_source: attributable ? (proxied ? 'trusted_proxy' : 'transport_peer') : 'unattributed' };
+  }
   const peers = new Map();
   let pending = 0;
 
@@ -97,21 +124,20 @@ function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } 
     return entry.count <= 30;
   }
 
-  return function handleTelemetry(request, response) {
+  function handleTelemetry(request, response) {
     if (typeof request.url !== 'string' || request.url.split('?', 1)[0] !== ENDPOINT) return false;
     function reject(status) {
       response.writeHead(status, { 'Cache-Control': 'no-store', 'Content-Length': '0', Connection: 'close' });
       response.end();
       request.resume();
     }
-    const peer = normalizeIp(request.socket.remoteAddress);
-    const proxied = trustProxy && peer ? proxiedClient(request, peer) : null;
-    const client = proxied || peer;
+    const address = attribution(request);
+    const client = clientAddress(request).client;
     if (!client) { reject(429); return true; }
     if (request.url !== ENDPOINT) { reject(400); return true; }
     if (request.method !== 'POST') { reject(405); return true; }
     const origins = request.headersDistinct.origin;
-    if (origins?.length !== 1 || origins[0] !== origin.origin) { reject(403); return true; }
+    if (origins?.length !== 1 || !allowedOrigins.includes(origins[0])) { reject(403); return true; }
     if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers['content-type'] || '') || request.headers['content-encoding']) {
       reject(415); return true;
     }
@@ -158,15 +184,32 @@ function createTelemetryHandler(allowedOrigin, instance, { trustProxy = false } 
           typeof input.event !== 'string' || !Object.hasOwn(EVENT_NAMES, input.event) || !PAGES.has(input.page)) {
         finish(400); return;
       }
-      const attributable = publicPeer(client);
       emit({ schema: 'moskit.security.v1', ts: Date.now() / 1000, event: EVENT_NAMES[input.event],
-        service: 'videohub', instance, peer_ip: peer, client_ip: attributable ? client : null,
-        ip_source: attributable ? (proxied ? 'trusted_proxy' : 'transport_peer') : 'unattributed',
+        service: 'videohub', instance, ...address,
         page: input.page, signal: 'client_reported' });
       finish(204);
     });
     return true;
+  }
+  // A separate global budget bounds audit work without spending the form quota.
+  let webCount = 0;
+  let webReset = 0;
+  handleTelemetry.audit = (request, response, classify) => {
+    response.once('finish', () => {
+      try {
+        const now = performance.now();
+        if (now >= webReset) { webReset = now + 60_000; webCount = 0; }
+        if (++webCount > 3000) return;
+        const route = classify();
+        emit({ schema: 'moskit.http.v1', ts: Date.now() / 1000, service: 'videohub', instance,
+          ...attribution(request), status: response.statusCode,
+          method: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'CONNECT'].includes(request.method) ? request.method : 'OTHER',
+          host: new URL(allowedOrigins[0]).hostname, uri: route.uri, route_class: route.route_class,
+          path_hash: createHash('sha256').update(route.hashPath).digest('hex'), gate_denied: false });
+      } catch { /* Audit failure must not change the response. */ }
+    });
   };
+  return handleTelemetry;
 }
 
 module.exports = { ENDPOINT, createTelemetryHandler };
