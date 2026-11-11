@@ -147,6 +147,15 @@ read-only API сохраняет прежний ответ. Origin-провер�
 файлов также заменяются. Query, body, cookies, auth headers, Host и поля форм не пишутся.
 Отказ XHTTP 403 не является отказом panel gate.
 
+Неоднозначные request targets имеют консервативный alias `/_ambiguous`,
+`route_class: other` и SHA-256 только этого фиксированного alias. Это malformed или
+относительная authority (`//…`), dot-сегменты, encoded dot/separator/backslash,
+вложенное percent-кодирование, malformed escapes, backslash и whitespace/control.
+Такие запросы не сохраняют различимость путей и API/page-классификацию. Обычные
+неизвестные пути сохраняют стабильные разные hashes; корректный absolute-form URL
+хешируется по path без authority. Ограничение относится только к audit: реальные
+маршруты, ответы и итоговый status остаются прежними.
+
 Событие формы остаётся отдельным действием: успешный submit при включённых обоих
 producer даёт один `moskit.security.v1` и один `moskit.http.v1` с HTTP 204.
 Web audit имеет отдельный общий бюджет 3000 событий в минуту на процесс и использует

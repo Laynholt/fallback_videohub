@@ -120,28 +120,71 @@ test('raw request targets redact private and dynamic prefixes before dot normali
     await t.test(privatePath.endsWith('/') ? 'trailing slash prefix' : 'plain prefix', async child => {
       const { base, events } = await start(child, { REMOVI_SWATTER_EVENTS: '0', REMOVI_SWATTER_WEB_AUDIT: '1', XHTTP_PATH: privatePath });
       const cases = [
-        ['/private-fixture/%2e%2e/outside', '/_private'],
-        ['/private-fixture/../outside', '/_private'],
+        ['/private-fixture/%2e%2e/outside', '/_ambiguous'],
+        ['/private-fixture/../outside', '/_ambiguous'],
         ['/private-fixture/child', '/_private'],
-        ['/%70rivate-fixture/../outside', '/_private'],
-        ['/private-fixture\\..\\outside', '/_private'],
-        ['/video/dynamic-fixture/../../outside', '/video/_id'],
-        ['/video%2fdynamic-fixture/../../outside', '/video/_id'],
-        ['/channel/dynamic-fixture/%2e%2e/%2e%2e/outside', '/channel/_author'],
+        ['/%70rivate-fixture/../outside', '/_ambiguous'],
+        ['/private-fixture\\..\\outside', '/_ambiguous'],
+        ['/video/dynamic-fixture/../../outside', '/_ambiguous'],
+        ['/video%2fdynamic-fixture/../../outside', '/_ambiguous'],
+        ['/channel/dynamic-fixture/%2e%2e/%2e%2e/outside', '/_ambiguous'],
         ['http://user-fixture:password-fixture@host.fixture/probe?token=fixture', '/probe'],
         ['http://different-user:different-password@different.fixture/probe', '/probe'],
-        ['http://user-fixture:password-fixture@host.fixture/private-fixture/../outside', '/_private'],
-        ['http://user-fixture:password-fixture@host.fixture', '/', 200]
+        ['http://user-fixture:password-fixture@host.fixture/private-fixture/../outside', '/_ambiguous'],
+        ['http://user-fixture:password-fixture@host.fixture', '/', 200],
+        ['http:///user-fixture:password-fixture@host.fixture/outside', '/_ambiguous'],
+        ['///user-fixture:password-fixture@host.fixture/outside', '/_ambiguous'],
+        ['/./private-fixture/../outside', '/_ambiguous'],
+        ['/a/../private-fixture/../outside', '/_ambiguous'],
+        ['/a/%2e%2e/private-fixture/../outside', '/_ambiguous'],
+        ['//host.fixture/outside', '/_ambiguous'],
+        ['/a/%252e%252e/private-fixture/outside', '/_ambiguous'],
+        ['/api/./catalog', '/_ambiguous', 200],
+        ['/a%zz/private-fixture', '/_ambiguous'],
+        ['/private-fixture-like', '/private-fixture-like']
       ];
       for (const [index, [target, safePath, status = 404]] of cases.entries()) {
-        assert.equal(await rawRequest(base, target), status);
+        assert.equal(await rawRequest(base, target), status, `raw target case ${index}`);
         await waitFor(() => events.length > index);
         assert.equal(events.length, index + 1);
         assert.equal(events[index].path_hash, digest(safePath));
+        if (safePath === '/_ambiguous') {
+          assert.equal(events[index].uri, '/_ambiguous');
+          assert.equal(events[index].route_class, 'other');
+          assert.equal(events[index].gate_denied, false);
+        }
       }
       assert.doesNotMatch(JSON.stringify(events), /private-fixture|dynamic-fixture|user-fixture|password-fixture|different-user|host\.fixture/);
     });
   }
+});
+
+test('audit classifier collapses ambiguous syntax including targets rejected by the HTTP parser', () => {
+  const source = readFileSync(path.join(root, 'server.js'), 'utf8');
+  const { auditRoute } = vm.runInNewContext(source + '\nmodule.exports = { auditRoute };', {
+    require: require('node:module').createRequire(path.join(root, 'server.js')),
+    module: { exports: {} }, __dirname: root, Buffer, console,
+    process: { env: { XHTTP_PATH: '/private-fixture/' } }
+  });
+  const targets = [
+    'http:/user-fixture:password-fixture@host.fixture/outside',
+    'http:////user-fixture:password-fixture@host.fixture/outside',
+    '///user-fixture:password-fixture@host.fixture/outside',
+    '/a/../private-fixture/../outside', '/./private-fixture/../outside',
+    '/%2E/private-fixture/../outside', '/a%2F..%2Fprivate-fixture/outside',
+    '/a%5C..%5Cprivate-fixture/outside', '/a\\..\\private-fixture/outside',
+    '/a/%252e%252e/private-fixture/outside', '/a%zz/private-fixture',
+    ' /private-fixture', '/a\t/private-fixture', ''
+  ];
+  for (const [index, target] of targets.entries()) {
+    const route = auditRoute(target);
+    assert.equal(route.uri, '/_ambiguous', `classifier case ${index}`);
+    assert.equal(route.hashPath, '/_ambiguous', `classifier hash input ${index}`);
+    assert.equal(route.route_class, 'other', `classifier class ${index}`);
+  }
+  assert.equal(auditRoute('/probe-one?secret=fixture').hashPath, '/probe-one');
+  assert.equal(auditRoute('/probe-two').hashPath, '/probe-two');
+  assert.equal(auditRoute('http://user-fixture:password-fixture@host.fixture/probe-one').hashPath, '/probe-one');
 });
 
 test('web audit ignores spoofed attribution from a peer outside the exact allowlist', async t => {

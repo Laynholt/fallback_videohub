@@ -304,11 +304,15 @@ function loadSwatter() {
 function auditRoute(rawUrl) {
   // Extract only the path, then redact before URL normalization can erase a private prefix.
   const target = typeof rawUrl === 'string' ? rawUrl.split(/[?#]/, 1)[0] : '';
-  const absolute = /^(?:[a-z][a-z0-9+.-]*:)?[\\/]{2}[^\\/]*([\\/].*)?$/i.exec(target);
-  let original = absolute ? (absolute[1] || '/') : target.startsWith('/') ? target : '/_invalid';
-  let decoded = original;
-  try { decoded = decodeURIComponent(original); } catch { /* Match the raw prefix on malformed escapes. */ }
-  const candidates = [original, decoded].map(value => value.replace(/\\/g, '/'));
+  const ambiguous = { uri: '/_ambiguous', route_class: 'other', hashPath: '/_ambiguous' };
+  const absolute = /^https?:\/\/[^/\\]+(\/.*)?$/i.exec(target);
+  let original = absolute ? (absolute[1] || '/') : target.startsWith('/') ? target : '';
+  // Normalization has multiple interpretations here; retain no submitted bytes or uniqueness.
+  if (!original || original.startsWith('//') || /[\\\s\x00-\x1f\x7f]/.test(target) ||
+      /(?:^|\/)\.{1,2}(?:\/|$)/.test(original) || /%(?:2e|2f|5c|25)/i.test(original)) return ambiguous;
+  let decoded;
+  try { decoded = decodeURIComponent(original); } catch { return ambiguous; }
+  const candidates = [original, decoded];
   const privatePrefix = XHTTP_PATH.replace(/\/+$/, '');
   if (privatePrefix && candidates.some(value => value === privatePrefix || value.startsWith(privatePrefix + '/'))) original = '/_private';
   else if (candidates.some(value => value.startsWith('/video/'))) original = '/video/_id';
