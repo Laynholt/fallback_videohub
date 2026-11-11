@@ -23,6 +23,10 @@ coverage/
 
 docker-data/
 
+# Host-specific nginx servers and their mounts
+docker-compose.override.yml
+sites/
+
 .codex-run/
 .superpowers/
 .playwright-mcp/

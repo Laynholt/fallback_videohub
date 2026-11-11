@@ -60,6 +60,20 @@ docker compose up -d --build
 
 `docker-compose.yml` передает `APP_PORT` в контейнер как переменную `PORT`, а `nginx.conf` собирается через `envsubst` во время старта контейнера.
 
+### Дополнительные сайты на конкретном сервере
+
+`nginx.conf` подключает `/etc/nginx/sites/*.conf`, если такие файлы есть. Без них ничего не меняется. Чтобы на одном сервере отдать через тот же `nginx` ещё один домен (например, Gitea), положите рядом с проектом `sites/<имя>.conf` и `docker-compose.override.yml`. Оба файла в `.gitignore`, `docker compose` подхватывает override сам:
+
+```yaml
+services:
+  nginx:
+    volumes:
+      - ./sites:/etc/nginx/sites:ro
+      - /home/wuser/certs/git:/etc/nginx/certs/git:ro
+```
+
+Файлы из `sites/` не проходят через `envsubst`: порт и домен в них пишутся явно.
+
 ## Локальный запуск без Docker
 
 Если `nginx` и TLS не нужны, приложение можно поднять напрямую:
