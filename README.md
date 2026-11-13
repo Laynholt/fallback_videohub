@@ -54,6 +54,7 @@ docker compose up -d --build
 | `APP_PORT` | Внутренний порт Node.js-приложения в контейнере `app`. |
 | `NGINX_HTTPS_PORT` | HTTPS-порт `nginx`. По умолчанию используется `9443`. |
 | `NGINX_HTTP_PORT` | HTTP-порт для редиректа на HTTPS. |
+| `NGINX_LISTEN_HOST` | Необязательно. Адрес, на котором слушает HTTPS-сервер `nginx`. По умолчанию `0.0.0.0`; в host-сети задайте `127.0.0.1`. Порт `80` не меняется. |
 | `SITE_DOMAIN` | Домен сайта, который подставляется в конфиг `nginx`. |
 | `CERT_FULLCHAIN_PATH` | Путь на хосте к `fullchain.pem`. |
 | `CERT_PRIVKEY_PATH` | Путь на хосте к приватному ключу TLS. |
@@ -73,6 +74,8 @@ services:
 ```
 
 Файлы из `sites/` не проходят через `envsubst`: порт и домен в них пишутся явно.
+
+Чтобы добавить `location` в основной HTTPS-сервер (например, служебный endpoint), положите `sites/server/<имя>.conf` с одним или несколькими блоками `location`; он подключается внутри `server` через `include /etc/nginx/sites/server/*.conf;`. Без файлов ничего не меняется. Глоб `sites/*.conf` не заходит в `sites/server/`, поэтому такие файлы не попадают на уровень `http`.
 
 ## Локальный запуск без Docker
 
