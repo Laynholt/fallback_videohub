@@ -37,13 +37,11 @@ services:
       APP_PORT: "${APP_PORT}"
       NGINX_HTTPS_PORT: "${NGINX_HTTPS_PORT}"
       NGINX_LISTEN_HOST: "${NGINX_LISTEN_HOST:-0.0.0.0}"
+      NGINX_PROXY_SOCKET: "${NGINX_PROXY_SOCKET:-}"
       SITE_DOMAIN: "${SITE_DOMAIN}"
-    command: >
-      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$NGINX_LISTEN_HOST $$SITE_DOMAIN'
-      < /etc/nginx/templates/nginx.conf.template
-      > /etc/nginx/nginx.conf
-      && nginx -g 'daemon off;'"
+    command: ["/bin/sh", "/etc/nginx/render.sh"]
     volumes:
+      - ./render.sh:/etc/nginx/render.sh:ro
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
       # ACME HTTP-01 challenge: скрипт пишет на хосте, nginx читает в контейнере
       - /var/www/acme:/var/www/acme:ro
