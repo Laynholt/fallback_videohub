@@ -55,11 +55,37 @@ docker compose up -d --build
 | `NGINX_HTTPS_PORT` | HTTPS-порт `nginx`. По умолчанию используется `9443`. |
 | `NGINX_HTTP_PORT` | HTTP-порт для редиректа на HTTPS. |
 | `NGINX_LISTEN_HOST` | Необязательно. Адрес, на котором слушает HTTPS-сервер `nginx`. По умолчанию `0.0.0.0`; в host-сети задайте `127.0.0.1`. Порт `80` не меняется. |
+| `NGINX_PROXY_SOCKET` | Необязательно. Unix-сокет с PROXY protocol для Xray Reality `target`, например `/run/xray-proxy/cover.sock`. Пусто (по умолчанию) — сокета нет. См. [ниже](#unix-сокет-с-proxy-protocol). |
 | `SITE_DOMAIN` | Домен сайта, который подставляется в конфиг `nginx`. |
 | `CERT_FULLCHAIN_PATH` | Путь на хосте к `fullchain.pem`. |
 | `CERT_PRIVKEY_PATH` | Путь на хосте к приватному ключу TLS. |
 
-`docker-compose.yml` передает `APP_PORT` в контейнер как переменную `PORT`, а `nginx.conf` собирается через `envsubst` во время старта контейнера.
+`docker-compose.yml` передает `APP_PORT` в контейнер как переменную `PORT`, а `nginx.conf` собирается скриптом `render.sh` во время старта контейнера. `envsubst` подставляет каждую `${VAR}` из `nginx.conf`, список берётся из самого шаблона. `RENDER_ONLY=1` останавливает скрипт после `nginx -t`.
+
+### Unix-сокет с PROXY protocol
+
+Если Xray Reality отправляет fallback в unix-сокет с `xver: 1`, nginx может принять его в основной HTTPS-сервер и взять настоящий IP клиента из PROXY-заголовка. TCP-порт `NGINX_HTTPS_PORT` работает как раньше и PROXY-заголовок не ждёт.
+
+1. На хосте создайте каталог сокета и lock-файл (оба принадлежат `root`; не в `/run`, он очищается при перезагрузке):
+
+   ```bash
+   sudo install -d -m 700 /var/lib/xray-proxy
+   sudo install -m 600 /dev/null /var/lib/xray-proxy/.frontend.lock
+   ```
+
+2. В `.env`: `NGINX_PROXY_SOCKET=/run/xray-proxy/cover.sock`.
+3. В `docker-compose.override.yml` смонтируйте каталог в путь из `.env`:
+
+   ```yaml
+   services:
+     nginx:
+       volumes:
+         - /var/lib/xray-proxy:/run/xray-proxy
+   ```
+
+4. В Xray путь сокета на хосте: `"target": "/var/lib/xray-proxy/cover.sock", "xver": 1`.
+
+При старте `render.sh` проверяет, что каталог — `root:root 0700`, а `.frontend.lock` — `root:root 0600`, и держит на lock-файле `flock`, пока работает nginx: второй фронтенд на тот же каталог не стартует. Оставшийся после аварии сокет удаляется, если это сокет `root`. Иначе контейнер не стартует, причина в `docker logs removi_nginx`. nginx доверяет адресу из PROXY-заголовка, поэтому подключаться к сокету должен только `root` (Xray).
 
 ### Дополнительные сайты на конкретном сервере
 
@@ -121,7 +147,7 @@ node server.js
 
 Чтобы включить события, добавьте `REMOVI_SWATTER_EVENTS=1` и `REMOVI_PUBLIC_ORIGIN=https://example.com` в файл окружения приложения. Для Mosquito с Compose overlay это файл `REMOVI_ENV_FILE`. Укажите точный адрес из браузера, включая нестандартный внешний порт, без пути и завершающего `/`. Необязательный `REMOVI_INSTANCE_ID` по умолчанию равен `videohub`. При выключенной или неверной настройке, а также при совпадении с `XHTTP_PATH`, сайт продолжит работать без событий, а причина появится в stderr контейнера (`docker logs removi_app`) строкой `Swatter events disabled: ...`.
 
-Четыре демонстрационные формы каталога и страницы релиза дают `decoy_login_attempt` и `decoy_register_attempt` в stdout контейнера `removi_app`. События означают отправку формы. Поля, cookies и `Referer` браузер не отправляет. По умолчанию приложение использует адрес соединения и игнорирует заголовки переадресации, поэтому за частным прокси запись остаётся без атрибуции клиенту, а лимит 30 событий в минуту становится общим для всех посетителей. `REMOVI_TRUST_PROXY=1` разрешает брать IP из последнего адреса `X-Forwarded-For`, но только когда соединение пришло из частной сети. Этот адрес записывает сам прокси: nginx из `docker-compose.yml` дописывает его в конец, Caddy заменяет недоверенный заголовок целиком. `X-Real-IP` не используется, потому что Caddy пропускает его от клиента без изменений. Тогда `client_ip` и лимит считаются по клиенту, `ip_source` равен `trusted_proxy`, а `peer_ip` остаётся адресом прокси. Включайте это, только если порт приложения доступен лишь через такой прокси. Если перед прокси стоит Xray (fallback или Reality `target`), прокси видит адрес Xray, и настоящий IP появится только после настройки PROXY protocol: `xver` в Xray и приём PROXY protocol в прокси (`proxy_protocol` с `real_ip_header proxy_protocol` в nginx или `listener_wrappers { proxy_protocol }` в Caddy).
+Четыре демонстрационные формы каталога и страницы релиза дают `decoy_login_attempt` и `decoy_register_attempt` в stdout контейнера `removi_app`. События означают отправку формы. Поля, cookies и `Referer` браузер не отправляет. По умолчанию приложение использует адрес соединения и игнорирует заголовки переадресации, поэтому за частным прокси запись остаётся без атрибуции клиенту, а лимит 30 событий в минуту становится общим для всех посетителей. `REMOVI_TRUST_PROXY=1` разрешает брать IP из последнего адреса `X-Forwarded-For`, но только когда соединение пришло из частной сети. Этот адрес записывает сам прокси: nginx из `docker-compose.yml` дописывает его в конец, Caddy заменяет недоверенный заголовок целиком. `X-Real-IP` не используется, потому что Caddy пропускает его от клиента без изменений. Тогда `client_ip` и лимит считаются по клиенту, `ip_source` равен `trusted_proxy`, а `peer_ip` остаётся адресом прокси. Включайте это, только если порт приложения доступен лишь через такой прокси. Если перед прокси стоит Xray (fallback или Reality `target`), прокси видит адрес Xray, и настоящий IP появится только после настройки PROXY protocol: `xver` в Xray и приём PROXY protocol в прокси (`proxy_protocol` с `real_ip_header proxy_protocol` в nginx, для nginx из `docker-compose.yml` — [`NGINX_PROXY_SOCKET`](#unix-сокет-с-proxy-protocol), или `listener_wrappers { proxy_protocol }` в Caddy).
 
 Строки событий ждут записи в очереди до 256 штук, поэтому всплеск отправок не теряется. Сверх очереди и при недоступном канале записи события отбрасываются, а сайт продолжает работать.
 
@@ -277,4 +303,4 @@ docker compose logs -f
 
 The app uses Node.js 24.22.1 LTS and the proxy uses nginx 1.30.6 on Alpine 3.24, pinned by digest. There are no npm dependencies. Review Node/nginx advisories and run `npm test` before updating the image pins; rebuild the app (`docker compose build --pull`) as well as pulling nginx for a future rollout. Existing containers are unchanged until recreated.
 
-`SITE_DOMAIN` may list several nginx server names separated by spaces; redirects use the first configured name. On Linux with Docker and OpenSSL, run `bash test/nginx-config.sh` to validate both single-name and multi-name TLS configurations.
+`SITE_DOMAIN` may list several nginx server names separated by spaces; redirects use the first configured name. On Linux with Docker and OpenSSL, run `bash test/nginx-config.sh` to validate both single-name and multi-name TLS configurations and the `NGINX_PROXY_SOCKET` startup checks with a real PROXY protocol request.

@@ -82,7 +82,31 @@ test('nginx HTTPS listen host defaults to 0.0.0.0 and the server hook is wired',
   const nginxConfig = fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8');
 
   assert.match(getComposeServiceBlock(compose, 'nginx'), /NGINX_LISTEN_HOST: "\$\{NGINX_LISTEN_HOST:-0\.0\.0\.0\}"/);
-  assert.match(compose, /\$\$NGINX_LISTEN_HOST/);
   assert.match(nginxConfig, /listen \$\{NGINX_LISTEN_HOST\}:\$\{NGINX_HTTPS_PORT\} ssl;/);
   assert.match(nginxConfig, /include \/etc\/nginx\/sites\/server\/\*\.conf;/);
+});
+
+test('nginx starts via render.sh, which substitutes every template variable compose passes', () => {
+  const nginxService = getComposeServiceBlock(fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8'), 'nginx');
+  const render = fs.readFileSync(path.join(root, 'render.sh'), 'utf8');
+  const templateVars = new Set(fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8').match(/\$\{[A-Z_][A-Z0-9_]*\}/g));
+
+  assert.match(nginxService, /command: \["\/bin\/sh", "\/etc\/nginx\/render\.sh"\]/);
+  assert.match(nginxService, /- \.\/render\.sh:\/etc\/nginx\/render\.sh:ro/);
+  // The envsubst list comes from the template itself, not from a hand-written list.
+  assert.match(render, /envsubst "\$\(grep -oE .*"\$template"/);
+  assert.doesNotMatch(render, /envsubst '/);
+  for (const name of [...templateVars].map((v) => v.slice(2, -1))) {
+    assert.match(nginxService, new RegExp(`^      ${name}: `, 'm'), `compose should pass ${name} to nginx`);
+  }
+});
+
+test('NGINX_PROXY_SOCKET is off by default and only adds an optional include', () => {
+  const nginxService = getComposeServiceBlock(fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8'), 'nginx');
+  const nginxConfig = fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8');
+
+  assert.match(nginxService, /NGINX_PROXY_SOCKET: "\$\{NGINX_PROXY_SOCKET:-\}"/);
+  // A glob include: without the file rendered by render.sh nothing is loaded.
+  assert.match(nginxConfig, /include \/etc\/nginx\/proxy-socket\*\.conf;/);
+  assert.doesNotMatch(nginxConfig, /proxy_protocol|unix:/);
 });
