@@ -76,3 +76,13 @@ test('compose rotates container logs', () => {
     assert.match(block, /max-file: "3"/, service);
   }
 });
+
+test('nginx HTTPS listen host defaults to 0.0.0.0 and the server hook is wired', () => {
+  const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+  const nginxConfig = fs.readFileSync(path.join(root, 'nginx.conf'), 'utf8');
+
+  assert.match(getComposeServiceBlock(compose, 'nginx'), /NGINX_LISTEN_HOST: "\$\{NGINX_LISTEN_HOST:-0\.0\.0\.0\}"/);
+  assert.match(compose, /\$\$NGINX_LISTEN_HOST/);
+  assert.match(nginxConfig, /listen \$\{NGINX_LISTEN_HOST\}:\$\{NGINX_HTTPS_PORT\} ssl;/);
+  assert.match(nginxConfig, /include \/etc\/nginx\/sites\/server\/\*\.conf;/);
+});

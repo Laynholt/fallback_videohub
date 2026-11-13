@@ -36,9 +36,10 @@ services:
     environment:
       APP_PORT: "${APP_PORT}"
       NGINX_HTTPS_PORT: "${NGINX_HTTPS_PORT}"
+      NGINX_LISTEN_HOST: "${NGINX_LISTEN_HOST:-0.0.0.0}"
       SITE_DOMAIN: "${SITE_DOMAIN}"
     command: >
-      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$SITE_DOMAIN'
+      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$NGINX_LISTEN_HOST $$SITE_DOMAIN'
       < /etc/nginx/templates/nginx.conf.template
       > /etc/nginx/nginx.conf
       && nginx -g 'daemon off;'"
