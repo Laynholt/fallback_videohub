@@ -13,7 +13,7 @@ services:
       - "${APP_PORT}"
 
   nginx:
-    image: nginx:1.30.6-alpine3.24-slim@sha256:d9322bba63c6cfc63dc9e86522fd4f95fd4d9020a02b5bced282bbf38b8c3960
+    image: nginx:1.30.7-alpine3.24-slim@sha256:b6c9aa217a1a855d53b0fb502a9a19f356404584e0bd1fc3d62a989e8dfcb6ca
     container_name: removi_nginx
     restart: unless-stopped
     depends_on:
