@@ -109,23 +109,14 @@ function sortByFreshness(cards) {
   });
 }
 
-function stableCatalogSort(cards) {
-  return [...cards].sort((left, right) => {
-    const leftHash = hashString(`catalog:${left.id}:${left.title}`);
-    const rightHash = hashString(`catalog:${right.id}:${right.title}`);
-    return leftHash - rightHash;
-  });
+function seededCatalogSort(cards, seed) {
+  const prefix = seed ? `catalog:${seed}` : 'catalog';
+  return cards.map(card => ({ card, hash: hashString(`${prefix}:${card.id}:${card.title}`) }))
+    .sort((left, right) => left.hash - right.hash || (seed ? left.card.id - right.card.id : 0))
+    .map(entry => entry.card);
 }
 
-function seededCatalogSort(cards, seed) {
-  if (!seed) return stableCatalogSort(cards);
-  return [...cards].sort((left, right) => {
-    const leftHash = hashString(`catalog:${seed}:${left.id}:${left.title}`);
-    const rightHash = hashString(`catalog:${seed}:${right.id}:${right.title}`);
-    if (leftHash !== rightHash) return leftHash - rightHash;
-    return left.id - right.id;
-  });
-}
+const DEFAULT_CATALOG = seededCatalogSort(ALL_CARDS, '');
 
 function normalizePreviewPath(value) {
   const rawPath = String(value || '').trim();
@@ -154,14 +145,12 @@ function serializeCard(card, options = {}) {
   };
 }
 
-function scoreCard(card, query) {
+function scoreCard(card, tokens) {
   const haystack = normalizeText(`${card.title} ${card.author} ${card.categoryLabel} ${card.category}`);
   const author = normalizeText(card.author);
   const title = normalizeText(card.title);
   const categoryLabel = normalizeText(card.categoryLabel);
   const category = normalizeText(card.category);
-  const tokens = normalizeText(query).split(/\s+/).filter(Boolean);
-  if (!tokens.length) return 0;
 
   let score = 0;
   tokens.forEach((token) => {
@@ -176,25 +165,20 @@ function scoreCard(card, query) {
 }
 
 function getCatalogCards(filter, query, seed = '') {
-  let cards = seededCatalogSort(ALL_CARDS, seed);
+  const source = !query && !seed ? DEFAULT_CATALOG : ALL_CARDS;
+  const cards = filter && filter !== 'all' ? source.filter(card => card.category === filter) : source;
+  if (!query) return seed ? seededCatalogSort(cards, seed) : cards;
 
-  if (filter && filter !== 'all') {
-    cards = cards.filter((card) => card.category === filter);
+  const tokens = normalizeText(query).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  const matches = [];
+  for (const card of cards) {
+    const score = scoreCard(card, tokens);
+    if (score > 0) matches.push({ card, score, hash: hashString(`search:${seed}:${card.id}:${card.title}`) });
   }
-
-  if (!query) return cards;
-
-  return cards
-    .map((card) => ({ card, score: scoreCard(card, query) }))
-    .filter((entry) => entry.score > 0)
-    .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-      const leftHash = hashString(`search:${seed}:${left.card.id}:${left.card.title}`);
-      const rightHash = hashString(`search:${seed}:${right.card.id}:${right.card.title}`);
-      if (leftHash !== rightHash) return leftHash - rightHash;
-      return left.card.id - right.card.id;
-    })
-    .map((entry) => entry.card);
+  return matches
+    .sort((left, right) => right.score - left.score || left.hash - right.hash || left.card.id - right.card.id)
+    .map(entry => entry.card);
 }
 
 function getCatalogPage({ filter = 'all', query = '', offset = 0, limit = SETTINGS.initial, seed = '' } = {}) {
