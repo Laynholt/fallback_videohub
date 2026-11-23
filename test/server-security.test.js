@@ -305,7 +305,7 @@ test('client renderers avoid HTML attribute injection from catalog API fields', 
 
   assert.doesNotMatch(app, /onclick="openChannel/i);
   assert.doesNotMatch(app, /decodeURIComponent\('\$\{encodeURIComponent/);
-  assert.match(app, /authorLink\.addEventListener\('click'/);
+  assert.match(app, /authorLink\.href = buildChannelUrl\(card\.author\)/);
 
   assert.doesNotMatch(channel, /root\.innerHTML\s*=\s*cards\.map/s);
   assert.doesNotMatch(channel, /onclick="window\.location\.href=/);

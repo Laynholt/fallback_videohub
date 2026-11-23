@@ -23,17 +23,15 @@
   }
 
   function createChannelCard(card) {
-    const article = document.createElement('article');
-    article.className = 'video-card';
-    article.addEventListener('click', () => {
-      window.location.href = buildPlayerUrl(card.id);
-    });
+    const link = document.createElement('a');
+    link.className = 'video-card';
+    link.href = buildPlayerUrl(card.id);
 
     const thumb = document.createElement('div');
     thumb.className = 'thumb-wrap';
     const image = document.createElement('img');
     image.src = card.previewStatic;
-    image.alt = card.title;
+    image.alt = '';
     image.addEventListener('error', () => {
       if (card.previewFallbackStatic) image.src = card.previewFallbackStatic;
     });
@@ -50,8 +48,8 @@
       createTextElement('span', '', `${card.views} прослушиваний · ${card.date}`)
     );
 
-    article.append(thumb, copy);
-    return article;
+    link.append(thumb, copy);
+    return link;
   }
 
   function renderCards(cards) {
