@@ -15,6 +15,18 @@ test('catalog exposes 200 generated releases', () => {
   assert.equal(page.total, 200);
 });
 
+test('seeded category search keeps the same releases across adjacent pages', () => {
+  const options = { filter: 'ambient', query: ' AMBIENT ', seed: 'category-search' };
+  const all = getCatalogPage({ ...options, limit: 12 });
+  const first = getCatalogPage({ ...options, limit: 6 });
+  const second = getCatalogPage({ ...options, offset: 6, limit: 6 });
+
+  assert.equal(all.items.length, 12);
+  assert.deepEqual([...first.items, ...second.items], all.items);
+  assert.equal(first.total, second.total);
+  assert.ok(all.items.every(item => item.category === options.filter));
+});
+
 test('catalog serializes public video ids as short non-numeric slugs', () => {
   const page = getCatalogPage({ limit: 12, seed: 'test-seed' });
   const ids = page.items.map((item) => item.id);

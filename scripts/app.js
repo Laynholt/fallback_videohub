@@ -98,8 +98,9 @@
     cardNode.className = 'video-card';
     cardNode.dataset.category = card.category;
     cardNode.style.animationDelay = `${delay}ms`;
-    cardNode.addEventListener('click', () => {
-      window.location.href = buildPlayerUrl(card.id);
+    const releaseUrl = buildPlayerUrl(card.id);
+    cardNode.addEventListener('click', event => {
+      if (!event.target.closest('a')) window.location.href = releaseUrl;
     });
 
     const thumb = document.createElement('div');
@@ -114,12 +115,12 @@
     const avatar = createTextElement('div', 'avatar', card.avatar);
     const text = document.createElement('div');
     text.className = 'card-text';
-    const title = createTextElement('div', 'card-title', card.title);
+    const title = createTextElement('a', 'card-title', card.title);
+    title.href = releaseUrl;
     const meta = document.createElement('div');
     meta.className = 'card-meta';
     const authorLink = createTextElement('a', 'author-link', card.author);
     authorLink.href = buildChannelUrl(card.author);
-    authorLink.addEventListener('click', (event) => openChannel(event, card.author));
     meta.append(
       authorLink,
       document.createElement('br'),
@@ -261,11 +262,6 @@
       return;
     }
     searchTimer = setTimeout(runSearch, 180);
-  }
-
-  function openChannel(event, author) {
-    if (event) event.stopPropagation();
-    window.location.href = buildChannelUrl(author);
   }
 
   function bindSearchInputs() {
@@ -680,7 +676,6 @@
   window.doLogin = doLogin;
   window.doRegister = doRegister;
   window.navClick = navClick;
-  window.openChannel = openChannel;
   window.openModal = openModal;
   window.openWelcomeAuth = openWelcomeAuth;
   window.overlayClose = overlayClose;
