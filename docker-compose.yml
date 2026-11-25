@@ -11,11 +11,21 @@ services:
       PORT: "${APP_PORT}"
     expose:
       - "${APP_PORT}"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:1.30.7-alpine3.24-slim@sha256:b6c9aa217a1a855d53b0fb502a9a19f356404584e0bd1fc3d62a989e8dfcb6ca
     container_name: removi_nginx
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       - app
     ports:
@@ -26,13 +36,12 @@ services:
     environment:
       APP_PORT: "${APP_PORT}"
       NGINX_HTTPS_PORT: "${NGINX_HTTPS_PORT}"
+      NGINX_LISTEN_HOST: "${NGINX_LISTEN_HOST:-0.0.0.0}"
+      NGINX_PROXY_SOCKET: "${NGINX_PROXY_SOCKET:-}"
       SITE_DOMAIN: "${SITE_DOMAIN}"
-    command: >
-      /bin/sh -c "envsubst '$$APP_PORT $$NGINX_HTTPS_PORT $$SITE_DOMAIN'
-      < /etc/nginx/templates/nginx.conf.template
-      > /etc/nginx/nginx.conf
-      && nginx -g 'daemon off;'"
+    command: ["/bin/sh", "/etc/nginx/render.sh"]
     volumes:
+      - ./render.sh:/etc/nginx/render.sh:ro
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
       # ACME HTTP-01 challenge: скрипт пишет на хосте, nginx читает в контейнере
       - /var/www/acme:/var/www/acme:ro
